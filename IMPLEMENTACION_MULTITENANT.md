@@ -81,6 +81,37 @@ Implementar el primer slice funcional de autenticacion, sesion distribuida y con
   - Usuario: `postgres`
   - Codigo Postgres: `28P01`
 - Validacion: despues de los cambios, `dotnet build RestauranteSaaS.Api\RestauranteSaaS.Api.csproj` compila correctamente sin warnings ni errores.
+- Se creo el script de seed inicial:
+  - `seed inicial entidades_multitenant.sql`
+- El seed incluye datos minimos para probar login, sesion Redis y contexto operativo:
+  - Usuario Identity
+  - Inquilino
+  - Rol y permisos de inquilino
+  - Asignacion de inquilino
+  - Restaurante
+  - Entidad fiscal
+  - Direccion
+  - Unidad operativa
+  - Empleado
+  - Rol y permisos operativos
+  - Asignacion operativa
+- Credenciales del seed:
+  - Email: `admin@rinconmaya.test`
+  - Password: `Admin123!`
+- Se regenero el `PasswordHash` del usuario seed usando `PasswordHasher` oficial de ASP.NET Identity y se verifico con resultado `Success`.
+- IDs utiles del seed:
+  - `id_usuario`: `10000000-0000-0000-0000-000000000001`
+  - `id_inquilino`: `20000000-0000-0000-0000-000000000001`
+  - `id_unidad_operativa`: `33000000-0000-0000-0000-000000000001`
+- Se agrego una interfaz web minima servida por la API:
+  - `/` muestra login.
+  - `/me.html` muestra identidad, contexto y permisos efectivos.
+- Para facilitar pruebas locales por HTTP, la cookie `access_token` mantiene `Secure = true` fuera de Development, pero en Development se emite sin `Secure`.
+- Error de validacion encontrado: no se pudo compilar sobre `bin/Debug` porque la API estaba corriendo y Windows tenia bloqueado `RestauranteSaaS.Api.exe`/`.dll`.
+- Arreglo de validacion: se compilo hacia `.build-check/RestauranteSaaS.Api` y el build fue exitoso sin warnings ni errores.
+- Error encontrado al probar login: los middlewares recibian `CancellationToken` como parametro inyectado y ASP.NET no lo puede resolver en middleware convencional.
+- Arreglo: `SessionAuthenticationMiddleware` y `OperationalContextMiddleware` ahora usan `httpContext.RequestAborted`.
+- Se actualizo el `PasswordHash` del usuario seed en PostgreSQL y se verifico que se afecto 1 fila.
 
 ## Estructura creada
 

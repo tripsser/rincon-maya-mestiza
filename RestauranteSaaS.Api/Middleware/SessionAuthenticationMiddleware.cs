@@ -9,9 +9,10 @@ public sealed class SessionAuthenticationMiddleware(RequestDelegate next)
     public async Task InvokeAsync(
         HttpContext httpContext,
         ISessionService sessionService,
-        ICurrentUserSetter currentUser,
-        CancellationToken cancellationToken)
+        ICurrentUserSetter currentUser)
     {
+        var cancellationToken = httpContext.RequestAborted;
+
         if (httpContext.GetEndpoint()?.Metadata.GetMetadata<IAllowAnonymous>() is not null)
         {
             await next(httpContext);

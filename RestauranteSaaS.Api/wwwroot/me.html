@@ -1,0 +1,69 @@
+<!doctype html>
+<html lang="es">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Rincon Maya | Contexto</title>
+  <link rel="stylesheet" href="/styles.css">
+</head>
+<body>
+  <main class="shell">
+    <header class="topbar">
+      <div>
+        <p class="eyebrow">Sesion activa</p>
+        <h1>Contexto operativo</h1>
+      </div>
+      <a class="link-button" href="/">Salir</a>
+    </header>
+
+    <section class="panel context-panel">
+      <div class="grid">
+        <label>
+          Tenant
+          <input id="tenantId" value="20000000-0000-0000-0000-000000000001">
+        </label>
+
+        <label>
+          Unidad operativa
+          <input id="operationalUnitId" value="33000000-0000-0000-0000-000000000001">
+        </label>
+      </div>
+
+      <button id="loadMe" type="button">Cargar contexto</button>
+      <p id="message" class="message" role="status"></p>
+    </section>
+
+    <section class="panel">
+      <h2>Identidad</h2>
+      <dl class="facts">
+        <div>
+          <dt>Usuario</dt>
+          <dd id="userId">-</dd>
+        </div>
+        <div>
+          <dt>Email</dt>
+          <dd id="email">-</dd>
+        </div>
+        <div>
+          <dt>Sesion</dt>
+          <dd id="sessionId">-</dd>
+        </div>
+      </dl>
+    </section>
+
+    <section class="columns">
+      <article class="panel">
+        <h2>Permisos inquilino</h2>
+        <ul id="tenantPermissions" class="permissions"></ul>
+      </article>
+
+      <article class="panel">
+        <h2>Permisos operativos</h2>
+        <ul id="operationalPermissions" class="permissions"></ul>
+      </article>
+    </section>
+  </main>
+
+  <script src="/me.js"></script>
+</body>
+</html>

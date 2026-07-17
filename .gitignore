@@ -3,6 +3,7 @@ bin/
 obj/
 **/bin/
 **/obj/
+.build-check/
 
 # IDE/user files
 .vs/

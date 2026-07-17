@@ -24,6 +24,7 @@ public static class AuthEndpoints
         ISessionService sessionService,
         IJwtTokenService jwtTokenService,
         IOptions<JwtOptions> jwtOptions,
+        IWebHostEnvironment environment,
         HttpContext httpContext,
         CancellationToken cancellationToken)
     {
@@ -42,7 +43,7 @@ public static class AuthEndpoints
             new CookieOptions
             {
                 HttpOnly = true,
-                Secure = true,
+                Secure = !environment.IsDevelopment(),
                 SameSite = SameSiteMode.Strict,
                 Expires = createdSession.Session.ExpiresAt
             });

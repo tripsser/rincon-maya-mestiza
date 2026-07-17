@@ -12,9 +12,10 @@ public sealed class OperationalContextMiddleware(RequestDelegate next)
     public async Task InvokeAsync(
         HttpContext httpContext,
         ICurrentUser currentUser,
-        ICurrentContextSetter currentContext,
-        CancellationToken cancellationToken)
+        ICurrentContextSetter currentContext)
     {
+        var cancellationToken = httpContext.RequestAborted;
+
         if (httpContext.GetEndpoint()?.Metadata.GetMetadata<IAllowAnonymous>() is not null || !currentUser.IsAuthenticated)
         {
             await next(httpContext);

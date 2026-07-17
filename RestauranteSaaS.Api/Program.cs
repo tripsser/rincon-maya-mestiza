@@ -97,6 +97,9 @@ if (app.Environment.IsDevelopment())
     app.MapOpenApi();
 }
 
+app.UseDefaultFiles();
+app.UseStaticFiles();
+
 app.UseAuthentication();
 app.UseMiddleware<SessionAuthenticationMiddleware>();
 app.UseMiddleware<OperationalContextMiddleware>();
