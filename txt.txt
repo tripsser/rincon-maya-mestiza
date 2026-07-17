@@ -1,0 +1,4 @@
+#impresoras
+1 El agente solo puede tomar trabajos de impresoras de su misma unidad_operativa.
+2 El trabajo debe estar en pendiente.
+3 El primero que haga el claim atómico gana.
