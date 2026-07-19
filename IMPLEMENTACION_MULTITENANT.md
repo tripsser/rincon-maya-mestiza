@@ -18,7 +18,7 @@ Implementar el primer slice funcional de autenticacion, sesion distribuida y con
   - Permisos calculados al login.
   - `RefreshSessionAsync` preparado, sin versionado de permisos en esta iteracion.
   - Sin refresh tokens en este slice.
-  - Headers de contexto: `X-Tenant-Id` y `X-Operational-Unit-Id`.
+  - Headers de contexto: `X-Tenant-Id`, `X-Restaurant-Id` y `X-Operational-Unit-Id`.
   - Denegaciones directas (`permitido = false`) ganan sobre permisos por rol.
   - RLS queda preparado, sin policies completas todavia.
 - Se creo el proyecto `RestauranteSaaS.Api` con ASP.NET Core Web API en .NET 9.
@@ -112,6 +112,125 @@ Implementar el primer slice funcional de autenticacion, sesion distribuida y con
 - Error encontrado al probar login: los middlewares recibian `CancellationToken` como parametro inyectado y ASP.NET no lo puede resolver en middleware convencional.
 - Arreglo: `SessionAuthenticationMiddleware` y `OperationalContextMiddleware` ahora usan `httpContext.RequestAborted`.
 - Se actualizo el `PasswordHash` del usuario seed en PostgreSQL y se verifico que se afecto 1 fila.
+- Se valido el primer flujo vertical funcional:
+  - Login con Identity
+  - JWT en cookie
+  - Sesion en Redis
+  - Permisos desde PostgreSQL
+  - Contexto tenant/unidad operativa
+  - UI minima mostrando datos reales
+
+## Decision frontend
+
+- Se creara frontend separado con Vite.
+- Stack acordado:
+  - React
+  - TypeScript
+  - Vite
+  - TanStack Query
+  - Zustand
+  - React Router
+  - Tailwind CSS
+  - Zod
+  - Lucide React
+- Responsabilidades:
+  - TanStack Query manejara datos remotos del backend: `/api/me`, restaurantes, unidades operativas, productos, comandas, etc.
+  - Zustand manejara estado local/global de UI y contexto activo:
+    - `tenantId`
+    - `restaurantId`
+    - `operationalUnitId`
+    - sidebar/menu
+    - filtros temporales
+    - seleccion local de vistas operativas
+  - El cliente HTTP del frontend usara el estado de Zustand para mandar:
+    - `X-Tenant-Id`
+    - `X-Restaurant-Id`
+    - `X-Operational-Unit-Id`
+- En desarrollo:
+  - Frontend Vite: `http://localhost:5173`
+  - API ASP.NET Core: `http://localhost:5016`
+  - Se necesitara CORS con credentials en la API para permitir cookie httpOnly entre puertos.
+- En produccion se decidira despues si:
+  - el build del frontend se sirve desde ASP.NET Core, o
+  - frontend y API se despliegan separados.
+
+## Decision autorizacion por restaurante
+
+- Se agrega un tercer plano semantico de autorizacion:
+  - Inquilino
+  - Restaurante / marca
+  - Unidad operativa
+- Restaurante/marca tendra su propia familia de roles, permisos y asignaciones, igual que inquilino y unidad operativa.
+- La razon principal es semantica:
+  - administrar un inquilino completo no es lo mismo que administrar una marca/restaurante;
+  - administrar una marca/restaurante no es lo mismo que operar una sucursal/unidad operativa.
+- Familias conceptuales:
+  - `roles_inquilino`
+  - `permisos_inquilino`
+  - `asignaciones_inquilino`
+  - `roles_restaurante`
+  - `permisos_restaurante`
+  - `asignaciones_restaurante`
+  - `roles_restaurante_permisos`
+  - `asignaciones_restaurante_permisos`
+  - `roles_operativos`
+  - `permisos_operativos`
+  - `asignaciones_operativas`
+- Decision de relacion:
+  - `asignaciones_restaurante` apunta a `id_usuario`, no a `id_empleado`.
+  - `asignaciones_restaurante` apunta a `id_restaurante`.
+  - `asignaciones_restaurante` no lleva `id_inquilino`, porque el inquilino se obtiene desde `restaurantes.id_inquilino`.
+  - `roles_restaurante` si lleva `id_inquilino` para que los roles administrativos de restaurante se definan por tenant.
+- Se agregaron entidades EF y migraciones para el plano restaurante.
+- Migraciones creadas:
+  - `20260719044126_AddRestaurantAuthorization`
+  - `20260719044208_FixRestaurantAuthorizationSnapshot`
+- Tablas agregadas por migracion:
+  - `roles_restaurante`
+  - `permisos_restaurante`
+  - `roles_restaurante_permisos`
+  - `asignaciones_restaurante`
+  - `asignaciones_restaurante_permisos`
+- `20260719044208_FixRestaurantAuthorizationSnapshot` no genera cambios SQL; solo estabiliza el snapshot/historial de EF.
+- Validacion:
+  - `dotnet build RestauranteSaaS.Api\RestauranteSaaS.Api.csproj` exitoso.
+  - `dotnet ef database update` aplico las migraciones correctamente.
+  - `dotnet ef migrations has-pending-model-changes` indica que no hay cambios pendientes.
+- Se adapto el runtime al nuevo plano restaurante:
+  - El JWT se mantiene minimo con `sub`, `sid` y `exp`; no se agregan claims de permisos ni scopes.
+  - Redis ahora guarda `restaurantScopes` ademas de `tenantScopes` y `operationalScopes`.
+  - `operationalScopes` ahora incluye `restaurantId` para derivar el restaurante desde la unidad operativa.
+  - `OperationalContextMiddleware` acepta `X-Restaurant-Id` como header opcional.
+  - `/api/me` devuelve `restaurantId` y `restaurantPermissions`.
+  - La interfaz minima `/me.html` muestra tenant, restaurante, unidad y las tres familias de permisos.
+- Se agrego compatibilidad defensiva para sesiones Redis antiguas: si una sesion no trae `restaurantScopes` o no trae `restaurantId` en `operationalScopes`, se recalcula y se guarda de nuevo.
+- Se actualizo el seed inicial con rol, permisos y asignacion de restaurante para el usuario demo.
+
+## Cobertura jerarquica de asignaciones
+
+- La cobertura de acceso sera jerarquica para evitar asignaciones repetitivas.
+- Un permiso/asignacion de nivel superior puede cubrir niveles inferiores cuando el permiso lo permita.
+- Jerarquia:
+
+```text
+inquilino
+  -> restaurante / marca
+      -> unidad operativa
+```
+
+- Ejemplos:
+  - Un admin global de inquilino puede administrar todos los restaurantes del inquilino sin asignarse a cada restaurante.
+  - Un admin global de restaurantes/marca puede administrar todas las unidades operativas de ese restaurante sin asignarse explicitamente a cada unidad.
+  - Un usuario operativo de unidad solo opera la unidad asignada, salvo que tenga asignacion superior.
+- Las asignaciones explicitas de nivel inferior seguiran existiendo para casos puntuales.
+- El calculo de permisos efectivos debera considerar:
+  - permisos directos del alcance actual;
+  - permisos heredados desde alcances superiores;
+  - denegaciones explicitas, donde `permitido = false` gana sobre permisos heredados o de rol.
+- La UI debera reflejar esta jerarquia:
+  - contexto inquilino para administracion global;
+  - contexto restaurante para administracion de marca/restaurante;
+  - contexto unidad operativa para operacion diaria.
 
 ## Estructura creada
 
@@ -136,14 +255,14 @@ RestauranteSaaS.Api/
 
 1. `POST /api/auth/login` recibe email y password.
 2. Identity valida al usuario contra `AspNetUsers`.
-3. `SessionService` calcula asignaciones de inquilino y operativas desde PostgreSQL.
+3. `SessionService` calcula asignaciones de inquilino, restaurante y operativas desde PostgreSQL.
 4. Se calculan permisos por rol mas permisos directos.
 5. Las denegaciones directas (`permitido = false`) remueven permisos aunque el rol los otorgue.
 6. Se guarda la sesion enriquecida en Redis con llave `session:{sid}`.
 7. Se genera JWT corto con `sub`, `sid` y `exp`.
 8. El JWT se manda como cookie `access_token`, `HttpOnly`, `Secure`, `SameSite=Strict`.
 9. En cada request autenticado, `SessionAuthenticationMiddleware` lee el `sid`, carga Redis y construye `ICurrentUser`.
-10. `OperationalContextMiddleware` lee `X-Tenant-Id` y opcionalmente `X-Operational-Unit-Id`, valida acceso y construye `ICurrentContext`.
+10. `OperationalContextMiddleware` lee `X-Tenant-Id`, opcionalmente `X-Restaurant-Id` y opcionalmente `X-Operational-Unit-Id`, valida acceso y construye `ICurrentContext`.
 
 ## Ejemplo de sesion Redis
 
@@ -170,9 +289,22 @@ Payload:
       "deniedPermissions": []
     }
   ],
+  "restaurantScopes": [
+    {
+      "tenantId": "22222222-2222-2222-2222-222222222222",
+      "restaurantId": "99999999-9999-9999-9999-999999999999",
+      "assignmentId": "aaaaaaaa-aaaa-aaaa-aaaa-aaaaaaaaaaaa",
+      "roleId": "bbbbbbbb-bbbb-bbbb-bbbb-bbbbbbbbbbbb",
+      "roleCode": "ADMIN_RESTAURANTE",
+      "roleName": "Administrador de restaurante",
+      "allowedPermissions": [ "restaurante.configurar", "restaurante.menu.administrar" ],
+      "deniedPermissions": []
+    }
+  ],
   "operationalScopes": [
     {
       "tenantId": "22222222-2222-2222-2222-222222222222",
+      "restaurantId": "99999999-9999-9999-9999-999999999999",
       "operationalUnitId": "55555555-5555-5555-5555-555555555555",
       "employeeId": "66666666-6666-6666-6666-666666666666",
       "assignmentId": "77777777-7777-7777-7777-777777777777",
@@ -215,15 +347,28 @@ Request con contexto operativo:
 GET /api/me HTTP/1.1
 Cookie: access_token={jwt}
 X-Tenant-Id: 22222222-2222-2222-2222-222222222222
+X-Restaurant-Id: 99999999-9999-9999-9999-999999999999
 X-Operational-Unit-Id: 55555555-5555-5555-5555-555555555555
+```
+
+Request con contexto restaurante:
+
+```http
+GET /api/me HTTP/1.1
+Cookie: access_token={jwt}
+X-Tenant-Id: 22222222-2222-2222-2222-222222222222
+X-Restaurant-Id: 99999999-9999-9999-9999-999999999999
 ```
 
 ## Notas tecnicas
 
 - La cookie se configura `Secure` por requerimiento. Para probar en navegador real se necesita HTTPS; en HTTP local el navegador puede no persistir/enviar la cookie.
-- `X-Operational-Unit-Id` es opcional para endpoints administrativos de inquilino.
+- `X-Restaurant-Id` es opcional para endpoints administrativos de inquilino.
+- `X-Operational-Unit-Id` es opcional para endpoints administrativos de inquilino o restaurante.
 - Si se manda `X-Operational-Unit-Id`, el acceso se valida contra asignaciones operativas.
+- Si se manda `X-Restaurant-Id`, el acceso se valida contra asignaciones de restaurante o contra un alcance superior de inquilino.
 - Los controllers/endpoints no leen claims ni headers directamente.
+- Despues de cambiar la forma de la sesion Redis, lo mas limpio es iniciar sesion de nuevo para crear un `sid` fresco con `restaurantScopes`; si se usa una cookie vieja, el backend intenta recalcular la sesion al leerla.
 - RLS queda preparado conceptualmente porque el contexto activo esta centralizado en `ICurrentUser` e `ICurrentContext`; el siguiente paso tecnico seria agregar un interceptor/transaccion que ejecute `set_config` en PostgreSQL antes de queries protegidas.
 
 ## Pendientes

@@ -7,6 +7,7 @@ namespace RestauranteSaaS.Api.Middleware;
 public sealed class OperationalContextMiddleware(RequestDelegate next)
 {
     private const string TenantHeader = "X-Tenant-Id";
+    private const string RestaurantHeader = "X-Restaurant-Id";
     private const string OperationalUnitHeader = "X-Operational-Unit-Id";
 
     public async Task InvokeAsync(
@@ -29,24 +30,43 @@ public sealed class OperationalContextMiddleware(RequestDelegate next)
             return;
         }
 
+        var hasRestaurantHeader = TryReadGuidHeader(httpContext, RestaurantHeader, out var restaurantId);
         var hasOperationalUnitHeader = TryReadGuidHeader(httpContext, OperationalUnitHeader, out var operationalUnitId);
         var tenantScopes = currentUser.Session.TenantScopes
             .Where(scope => scope.TenantId == tenantId)
             .ToArray();
 
+        var restaurantScopes = hasRestaurantHeader
+            ? currentUser.Session.RestaurantScopes
+                .Where(scope => scope.TenantId == tenantId && scope.RestaurantId == restaurantId)
+                .ToArray()
+            : Array.Empty<RestaurantScope>();
+
         var operationalScopes = hasOperationalUnitHeader
             ? currentUser.Session.OperationalScopes
-                .Where(scope => scope.TenantId == tenantId && scope.OperationalUnitId == operationalUnitId)
+                .Where(scope => scope.TenantId == tenantId
+                    && scope.OperationalUnitId == operationalUnitId
+                    && (!hasRestaurantHeader || scope.RestaurantId == restaurantId))
                 .ToArray()
             : Array.Empty<OperationalScope>();
 
+        if (!hasRestaurantHeader && operationalScopes.Length > 0)
+        {
+            restaurantId = operationalScopes[0].RestaurantId;
+            hasRestaurantHeader = true;
+            restaurantScopes = currentUser.Session.RestaurantScopes
+                .Where(scope => scope.TenantId == tenantId && scope.RestaurantId == restaurantId)
+                .ToArray();
+        }
+
         var hasTenantAccess = tenantScopes.Length > 0;
+        var hasRestaurantAccess = hasRestaurantHeader && restaurantScopes.Length > 0;
         var hasOperationalAccess = hasOperationalUnitHeader && operationalScopes.Length > 0;
 
-        if (!hasTenantAccess && !hasOperationalAccess)
+        if (!hasTenantAccess && !hasRestaurantAccess && !hasOperationalAccess)
         {
             httpContext.Response.StatusCode = StatusCodes.Status403Forbidden;
-            await httpContext.Response.WriteAsync("User does not have access to the requested tenant or operational unit.", cancellationToken);
+            await httpContext.Response.WriteAsync("User does not have access to the requested tenant, restaurant, or operational unit.", cancellationToken);
             return;
         }
 
@@ -54,14 +74,20 @@ public sealed class OperationalContextMiddleware(RequestDelegate next)
             tenantScopes.Select(scope => scope.AllowedPermissions),
             tenantScopes.Select(scope => scope.DeniedPermissions));
 
+        var restaurantPermissions = AggregatePermissions(
+            restaurantScopes.Select(scope => scope.AllowedPermissions),
+            restaurantScopes.Select(scope => scope.DeniedPermissions));
+
         var operationalPermissions = AggregatePermissions(
             operationalScopes.Select(scope => scope.AllowedPermissions),
             operationalScopes.Select(scope => scope.DeniedPermissions));
 
         currentContext.Set(
             tenantId,
+            hasRestaurantHeader ? restaurantId : null,
             hasOperationalUnitHeader ? operationalUnitId : null,
             tenantPermissions,
+            restaurantPermissions,
             operationalPermissions);
 
         await next(httpContext);

@@ -24,6 +24,11 @@
         </label>
 
         <label>
+          Restaurante
+          <input id="restaurantId" value="30000000-0000-0000-0000-000000000001">
+        </label>
+
+        <label>
           Unidad operativa
           <input id="operationalUnitId" value="33000000-0000-0000-0000-000000000001">
         </label>
@@ -48,6 +53,18 @@
           <dt>Sesion</dt>
           <dd id="sessionId">-</dd>
         </div>
+        <div>
+          <dt>Tenant activo</dt>
+          <dd id="activeTenantId">-</dd>
+        </div>
+        <div>
+          <dt>Restaurante activo</dt>
+          <dd id="activeRestaurantId">-</dd>
+        </div>
+        <div>
+          <dt>Unidad activa</dt>
+          <dd id="activeOperationalUnitId">-</dd>
+        </div>
       </dl>
     </section>
 
@@ -60,6 +77,11 @@
       <article class="panel">
         <h2>Permisos operativos</h2>
         <ul id="operationalPermissions" class="permissions"></ul>
+      </article>
+
+      <article class="panel">
+        <h2>Permisos restaurante</h2>
+        <ul id="restaurantPermissions" class="permissions"></ul>
       </article>
     </section>
   </main>

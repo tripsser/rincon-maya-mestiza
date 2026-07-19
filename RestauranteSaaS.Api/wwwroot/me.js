@@ -1,4 +1,5 @@
 const tenantInput = document.querySelector("#tenantId");
+const restaurantInput = document.querySelector("#restaurantId");
 const operationalUnitInput = document.querySelector("#operationalUnitId");
 const loadButton = document.querySelector("#loadMe");
 const message = document.querySelector("#message");
@@ -6,7 +7,11 @@ const message = document.querySelector("#message");
 const userId = document.querySelector("#userId");
 const email = document.querySelector("#email");
 const sessionId = document.querySelector("#sessionId");
+const activeTenantId = document.querySelector("#activeTenantId");
+const activeRestaurantId = document.querySelector("#activeRestaurantId");
+const activeOperationalUnitId = document.querySelector("#activeOperationalUnitId");
 const tenantPermissions = document.querySelector("#tenantPermissions");
+const restaurantPermissions = document.querySelector("#restaurantPermissions");
 const operationalPermissions = document.querySelector("#operationalPermissions");
 
 loadButton.addEventListener("click", loadContext);
@@ -20,6 +25,7 @@ async function loadContext() {
     credentials: "same-origin",
     headers: {
       "X-Tenant-Id": tenantInput.value,
+      "X-Restaurant-Id": restaurantInput.value,
       "X-Operational-Unit-Id": operationalUnitInput.value
     }
   });
@@ -36,7 +42,11 @@ async function loadContext() {
   userId.textContent = data.identity.userId;
   email.textContent = data.identity.email;
   sessionId.textContent = data.identity.sessionId;
+  activeTenantId.textContent = data.tenantId ?? "-";
+  activeRestaurantId.textContent = data.restaurantId ?? "-";
+  activeOperationalUnitId.textContent = data.operationalUnitId ?? "-";
   renderPermissions(tenantPermissions, data.tenantPermissions);
+  renderPermissions(restaurantPermissions, data.restaurantPermissions);
   renderPermissions(operationalPermissions, data.operationalPermissions);
   message.textContent = "Contexto cargado.";
 }
@@ -62,6 +72,10 @@ function clearView() {
   userId.textContent = "-";
   email.textContent = "-";
   sessionId.textContent = "-";
+  activeTenantId.textContent = "-";
+  activeRestaurantId.textContent = "-";
+  activeOperationalUnitId.textContent = "-";
   tenantPermissions.innerHTML = "";
+  restaurantPermissions.innerHTML = "";
   operationalPermissions.innerHTML = "";
 }

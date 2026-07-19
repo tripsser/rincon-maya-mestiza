@@ -201,6 +201,49 @@ CREATE TABLE asignaciones_inquilino_permisos
         ON DELETE CASCADE
 );
 
+CREATE TABLE roles_restaurante
+(
+    id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+    id_inquilino UUID NOT NULL,
+    codigo VARCHAR(40) NOT NULL,
+    nombre VARCHAR(100) NOT NULL,
+    descripcion TEXT NOT NULL,
+    activo BOOLEAN NOT NULL DEFAULT TRUE,
+    CONSTRAINT fk_roles_restaurante_inquilinos
+        FOREIGN KEY (id_inquilino)
+        REFERENCES inquilinos(id),
+    CONSTRAINT ux_roles_restaurante_inquilino_codigo
+        UNIQUE (id_inquilino, codigo),
+    CONSTRAINT ux_roles_restaurante_inquilino_nombre
+        UNIQUE (id_inquilino, nombre)
+);
+
+CREATE TABLE permisos_restaurante
+(
+    id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+    codigo VARCHAR(100) NOT NULL,
+    nombre VARCHAR(120) NOT NULL,
+    descripcion TEXT NOT NULL,
+    CONSTRAINT ux_permisos_restaurante_codigo
+        UNIQUE (codigo)
+);
+
+CREATE TABLE roles_restaurante_permisos
+(
+    id_rol_restaurante UUID NOT NULL,
+    id_permiso_restaurante UUID NOT NULL,
+    CONSTRAINT pk_roles_restaurante_permisos
+        PRIMARY KEY (id_rol_restaurante, id_permiso_restaurante),
+    CONSTRAINT fk_roles_restaurante_permisos_roles
+        FOREIGN KEY (id_rol_restaurante)
+        REFERENCES roles_restaurante(id)
+        ON DELETE CASCADE,
+    CONSTRAINT fk_roles_restaurante_permisos_permisos
+        FOREIGN KEY (id_permiso_restaurante)
+        REFERENCES permisos_restaurante(id)
+        ON DELETE CASCADE
+);
+
 CREATE TABLE restaurantes
 (
     id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
@@ -215,6 +258,48 @@ CREATE TABLE restaurantes
         REFERENCES inquilinos(id),
     CONSTRAINT ux_restaurantes_inquilino_codigo
         UNIQUE (id_inquilino, codigo)
+);
+
+CREATE TABLE asignaciones_restaurante
+(
+    id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+    codigo VARCHAR(40) NOT NULL,
+    id_usuario UUID NOT NULL,
+    id_restaurante UUID NOT NULL,
+    id_rol_restaurante UUID NOT NULL,
+    activo BOOLEAN NOT NULL DEFAULT TRUE,
+    fecha_inicio DATE NOT NULL,
+    fecha_fin DATE NULL,
+    CONSTRAINT fk_asignaciones_restaurante_usuarios
+        FOREIGN KEY (id_usuario)
+        REFERENCES "AspNetUsers" ("Id"),
+    CONSTRAINT fk_asignaciones_restaurante_restaurantes
+        FOREIGN KEY (id_restaurante)
+        REFERENCES restaurantes(id),
+    CONSTRAINT fk_asignaciones_restaurante_roles
+        FOREIGN KEY (id_rol_restaurante)
+        REFERENCES roles_restaurante(id),
+    CONSTRAINT ux_asignaciones_restaurante_codigo
+        UNIQUE (codigo),
+    CONSTRAINT ux_asignaciones_restaurante_usuario_restaurante_rol
+        UNIQUE (id_usuario, id_restaurante, id_rol_restaurante)
+);
+
+CREATE TABLE asignaciones_restaurante_permisos
+(
+    id_asignacion_restaurante UUID NOT NULL,
+    id_permiso_restaurante UUID NOT NULL,
+    permitido BOOLEAN NOT NULL DEFAULT TRUE,
+    CONSTRAINT pk_asignaciones_restaurante_permisos
+        PRIMARY KEY (id_asignacion_restaurante, id_permiso_restaurante),
+    CONSTRAINT fk_asignaciones_restaurante_permisos_asignaciones
+        FOREIGN KEY (id_asignacion_restaurante)
+        REFERENCES asignaciones_restaurante(id)
+        ON DELETE CASCADE,
+    CONSTRAINT fk_asignaciones_restaurante_permisos_permisos
+        FOREIGN KEY (id_permiso_restaurante)
+        REFERENCES permisos_restaurante(id)
+        ON DELETE CASCADE
 );
 
 CREATE TABLE entidades_fiscales
@@ -420,8 +505,16 @@ CREATE INDEX idx_asignaciones_inquilino_inquilino ON asignaciones_inquilino(id_i
 CREATE INDEX idx_asignaciones_inquilino_rol ON asignaciones_inquilino(id_rol_inquilino);
 CREATE INDEX idx_asignaciones_inquilino_activo ON asignaciones_inquilino(activo);
 CREATE INDEX idx_asignaciones_inquilino_permisos_permiso ON asignaciones_inquilino_permisos(id_permiso_inquilino);
+CREATE INDEX idx_roles_restaurante_inquilino ON roles_restaurante(id_inquilino);
+CREATE INDEX idx_roles_restaurante_activo ON roles_restaurante(activo);
+CREATE INDEX idx_roles_restaurante_permisos_permiso ON roles_restaurante_permisos(id_permiso_restaurante);
 CREATE INDEX idx_restaurantes_inquilino ON restaurantes(id_inquilino);
 CREATE INDEX idx_restaurantes_activo ON restaurantes(activo);
+CREATE INDEX idx_asignaciones_restaurante_usuario ON asignaciones_restaurante(id_usuario);
+CREATE INDEX idx_asignaciones_restaurante_restaurante ON asignaciones_restaurante(id_restaurante);
+CREATE INDEX idx_asignaciones_restaurante_rol ON asignaciones_restaurante(id_rol_restaurante);
+CREATE INDEX idx_asignaciones_restaurante_activo ON asignaciones_restaurante(activo);
+CREATE INDEX idx_asignaciones_restaurante_permisos_permiso ON asignaciones_restaurante_permisos(id_permiso_restaurante);
 CREATE INDEX idx_entidades_fiscales_inquilino ON entidades_fiscales(id_inquilino);
 CREATE INDEX idx_entidades_fiscales_activo ON entidades_fiscales(activo);
 CREATE INDEX idx_direcciones_inquilino ON direcciones(id_inquilino);

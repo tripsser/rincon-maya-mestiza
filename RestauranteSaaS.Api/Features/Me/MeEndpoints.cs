@@ -22,8 +22,10 @@ public static class MeEndpoints
                 currentUser.SessionId,
                 currentUser.Email),
             currentContext.TenantId,
+            currentContext.RestaurantId,
             currentContext.OperationalUnitId,
             currentContext.TenantPermissions.Order(StringComparer.OrdinalIgnoreCase).ToArray(),
+            currentContext.RestaurantPermissions.Order(StringComparer.OrdinalIgnoreCase).ToArray(),
             currentContext.OperationalPermissions.Order(StringComparer.OrdinalIgnoreCase).ToArray()));
     }
 }
@@ -31,8 +33,10 @@ public static class MeEndpoints
 public sealed record MeResponse(
     UserIdentityResponse Identity,
     Guid TenantId,
+    Guid? RestaurantId,
     Guid? OperationalUnitId,
     IReadOnlyList<string> TenantPermissions,
+    IReadOnlyList<string> RestaurantPermissions,
     IReadOnlyList<string> OperationalPermissions);
 
 public sealed record UserIdentityResponse(Guid UserId, Guid SessionId, string Email);

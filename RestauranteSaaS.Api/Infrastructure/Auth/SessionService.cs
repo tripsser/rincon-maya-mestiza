@@ -30,9 +30,17 @@ public sealed class SessionService(
     public async Task<UserSession?> GetSessionAsync(Guid sessionId, CancellationToken cancellationToken)
     {
         var payload = await redis.GetDatabase().StringGetAsync(GetKey(sessionId));
-        return payload.IsNullOrEmpty
+        var session = payload.IsNullOrEmpty
             ? null
             : JsonSerializer.Deserialize<UserSession>(payload!, JsonOptions);
+
+        if (session is not null && NeedsRuntimeRefresh(session))
+        {
+            session = await BuildSessionAsync(session.UserId, cancellationToken);
+            await StoreSessionAsync(sessionId, session);
+        }
+
+        return session;
     }
 
     public async Task<UserSession?> RefreshSessionAsync(Guid sessionId, CancellationToken cancellationToken)
@@ -58,12 +66,14 @@ public sealed class SessionService(
             .SingleAsync(row => row.Id == userId, cancellationToken);
 
         var tenantScopes = await BuildTenantScopesAsync(userId, cancellationToken);
+        var restaurantScopes = await BuildRestaurantScopesAsync(userId, cancellationToken);
         var operationalScopes = await BuildOperationalScopesAsync(userId, cancellationToken);
 
         return new UserSession(
             user.Id,
             user.Email ?? string.Empty,
             tenantScopes,
+            restaurantScopes,
             operationalScopes,
             now,
             now.AddMinutes(sessionOptions.ExpirationMinutes));
@@ -131,6 +141,72 @@ public sealed class SessionService(
         return scopes;
     }
 
+    private async Task<IReadOnlyList<RestaurantScope>> BuildRestaurantScopesAsync(Guid userId, CancellationToken cancellationToken)
+    {
+        var today = DateTime.UtcNow;
+        var assignments = await (
+            from assignment in dbContext.AsignacionesRestaurante.AsNoTracking()
+            join restaurant in dbContext.Restaurantes.AsNoTracking() on assignment.IdRestaurante equals restaurant.Id
+            join role in dbContext.RolesRestaurante.AsNoTracking() on assignment.IdRoleRestaurante equals role.Id
+            where assignment.IdUsuario == userId
+                && assignment.Activo
+                && restaurant.Activo
+                && role.Activo
+                && assignment.FechaInicio <= today
+                && (assignment.FechaFin == null || assignment.FechaFin >= today)
+            select new
+            {
+                Assignment = assignment,
+                Restaurant = restaurant,
+                Role = role
+            }).ToListAsync(cancellationToken);
+
+        var scopes = new List<RestaurantScope>();
+        foreach (var item in assignments)
+        {
+            var rolePermissions = await (
+                from rolePermission in dbContext.RolesRestaurantePermisos.AsNoTracking()
+                join permission in dbContext.PermisosRestaurante.AsNoTracking()
+                    on rolePermission.IdPermisoRestaurante equals permission.Id
+                where rolePermission.IdRoleRestaurante == item.Role.Id
+                select permission.Codigo).ToListAsync(cancellationToken);
+
+            var directPermissions = await (
+                from assignmentPermission in dbContext.AsignacionesRestaurantePermisos.AsNoTracking()
+                join permission in dbContext.PermisosRestaurante.AsNoTracking()
+                    on assignmentPermission.IdPermisoRestaurante equals permission.Id
+                where assignmentPermission.IdAsignacionRestaurante == item.Assignment.Id
+                select new { permission.Codigo, assignmentPermission.Permitido }).ToListAsync(cancellationToken);
+
+            var allowed = new HashSet<string>(rolePermissions, StringComparer.OrdinalIgnoreCase);
+            var denied = new HashSet<string>(StringComparer.OrdinalIgnoreCase);
+            foreach (var direct in directPermissions)
+            {
+                if (direct.Permitido)
+                {
+                    allowed.Add(direct.Codigo);
+                }
+                else
+                {
+                    denied.Add(direct.Codigo);
+                    allowed.Remove(direct.Codigo);
+                }
+            }
+
+            scopes.Add(new RestaurantScope(
+                item.Restaurant.IdInquilino,
+                item.Restaurant.Id,
+                item.Assignment.Id,
+                item.Role.Id,
+                item.Role.Codigo,
+                item.Role.Nombre,
+                allowed.Order(StringComparer.OrdinalIgnoreCase).ToArray(),
+                denied.Order(StringComparer.OrdinalIgnoreCase).ToArray()));
+        }
+
+        return scopes;
+    }
+
     private async Task<IReadOnlyList<OperationalScope>> BuildOperationalScopesAsync(Guid userId, CancellationToken cancellationToken)
     {
         var today = DateTime.UtcNow;
@@ -187,6 +263,7 @@ public sealed class SessionService(
 
             scopes.Add(new OperationalScope(
                 item.Unit.IdInquilino,
+                item.Unit.IdRestaurante,
                 item.Unit.Id,
                 item.Employee.Id,
                 item.Assignment.Id,
@@ -204,6 +281,10 @@ public sealed class SessionService(
         var payload = JsonSerializer.Serialize(session, JsonOptions);
         return redis.GetDatabase().StringSetAsync(GetKey(sessionId), payload, session.ExpiresAt - DateTimeOffset.UtcNow);
     }
+
+    private static bool NeedsRuntimeRefresh(UserSession session)
+        => session.RestaurantScopes is null
+            || session.OperationalScopes.Any(scope => scope.RestaurantId == Guid.Empty);
 
     private string GetKey(Guid sessionId) => $"{sessionOptions.KeyPrefix}:{sessionId}";
 }

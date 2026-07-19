@@ -14,6 +14,11 @@ public sealed class AppDbContext(DbContextOptions<AppDbContext> options)
     public DbSet<RoleInquilinoPermiso> RolesInquilinoPermisos => Set<RoleInquilinoPermiso>();
     public DbSet<AsignacionInquilino> AsignacionesInquilino => Set<AsignacionInquilino>();
     public DbSet<AsignacionInquilinoPermiso> AsignacionesInquilinoPermisos => Set<AsignacionInquilinoPermiso>();
+    public DbSet<RoleRestaurante> RolesRestaurante => Set<RoleRestaurante>();
+    public DbSet<PermisoRestaurante> PermisosRestaurante => Set<PermisoRestaurante>();
+    public DbSet<RoleRestaurantePermiso> RolesRestaurantePermisos => Set<RoleRestaurantePermiso>();
+    public DbSet<AsignacionRestaurante> AsignacionesRestaurante => Set<AsignacionRestaurante>();
+    public DbSet<AsignacionRestaurantePermiso> AsignacionesRestaurantePermisos => Set<AsignacionRestaurantePermiso>();
     public DbSet<Restaurante> Restaurantes => Set<Restaurante>();
     public DbSet<EntidadFiscal> EntidadesFiscales => Set<EntidadFiscal>();
     public DbSet<Direccion> Direcciones => Set<Direccion>();
@@ -34,6 +39,7 @@ public sealed class AppDbContext(DbContextOptions<AppDbContext> options)
 
         MapIdentity(builder);
         MapTenantAuthorization(builder);
+        MapRestaurantAuthorization(builder);
         MapBusinessEntities(builder);
         MapOperationalAuthorization(builder);
     }
@@ -148,6 +154,83 @@ public sealed class AppDbContext(DbContextOptions<AppDbContext> options)
             entity.HasIndex(row => row.IdPermisoInquilino).HasDatabaseName("idx_asignaciones_inquilino_permisos_permiso");
             entity.HasOne<AsignacionInquilino>().WithMany().HasForeignKey(row => row.IdAsignacionInquilino).HasConstraintName("fk_asignaciones_inquilino_permisos_asignaciones").OnDelete(DeleteBehavior.Cascade);
             entity.HasOne<PermisoInquilino>().WithMany().HasForeignKey(row => row.IdPermisoInquilino).HasConstraintName("fk_asignaciones_inquilino_permisos_permisos").OnDelete(DeleteBehavior.Cascade);
+        });
+    }
+
+    private static void MapRestaurantAuthorization(ModelBuilder builder)
+    {
+        builder.Entity<RoleRestaurante>(entity =>
+        {
+            entity.ToTable("roles_restaurante");
+            entity.HasKey(row => row.Id);
+            entity.Property(row => row.Id).HasColumnName("id").HasDefaultValueSql("gen_random_uuid()");
+            entity.Property(row => row.IdInquilino).HasColumnName("id_inquilino");
+            entity.Property(row => row.Codigo).HasColumnName("codigo").HasMaxLength(40);
+            entity.Property(row => row.Nombre).HasColumnName("nombre").HasMaxLength(100);
+            entity.Property(row => row.Descripcion).HasColumnName("descripcion");
+            entity.Property(row => row.Activo).HasColumnName("activo").HasDefaultValue(true);
+            entity.HasIndex(row => row.IdInquilino).HasDatabaseName("idx_roles_restaurante_inquilino");
+            entity.HasIndex(row => row.Activo).HasDatabaseName("idx_roles_restaurante_activo");
+            entity.HasIndex(row => new { row.IdInquilino, row.Codigo }).IsUnique().HasDatabaseName("ux_roles_restaurante_inquilino_codigo");
+            entity.HasIndex(row => new { row.IdInquilino, row.Nombre }).IsUnique().HasDatabaseName("ux_roles_restaurante_inquilino_nombre");
+            entity.HasOne<Inquilino>().WithMany().HasForeignKey(row => row.IdInquilino).HasConstraintName("fk_roles_restaurante_inquilinos");
+        });
+
+        builder.Entity<PermisoRestaurante>(entity =>
+        {
+            entity.ToTable("permisos_restaurante");
+            entity.HasKey(row => row.Id);
+            entity.Property(row => row.Id).HasColumnName("id").HasDefaultValueSql("gen_random_uuid()");
+            entity.Property(row => row.Codigo).HasColumnName("codigo").HasMaxLength(100);
+            entity.Property(row => row.Nombre).HasColumnName("nombre").HasMaxLength(120);
+            entity.Property(row => row.Descripcion).HasColumnName("descripcion");
+            entity.HasIndex(row => row.Codigo).IsUnique().HasDatabaseName("ux_permisos_restaurante_codigo");
+        });
+
+        builder.Entity<RoleRestaurantePermiso>(entity =>
+        {
+            entity.ToTable("roles_restaurante_permisos");
+            entity.HasKey(row => new { row.IdRoleRestaurante, row.IdPermisoRestaurante });
+            entity.Property(row => row.IdRoleRestaurante).HasColumnName("id_rol_restaurante");
+            entity.Property(row => row.IdPermisoRestaurante).HasColumnName("id_permiso_restaurante");
+            entity.HasIndex(row => row.IdPermisoRestaurante).HasDatabaseName("idx_roles_restaurante_permisos_permiso");
+            entity.HasOne<RoleRestaurante>().WithMany().HasForeignKey(row => row.IdRoleRestaurante).HasConstraintName("fk_roles_restaurante_permisos_roles").OnDelete(DeleteBehavior.Cascade);
+            entity.HasOne<PermisoRestaurante>().WithMany().HasForeignKey(row => row.IdPermisoRestaurante).HasConstraintName("fk_roles_restaurante_permisos_permisos").OnDelete(DeleteBehavior.Cascade);
+        });
+
+        builder.Entity<AsignacionRestaurante>(entity =>
+        {
+            entity.ToTable("asignaciones_restaurante");
+            entity.HasKey(row => row.Id);
+            entity.Property(row => row.Id).HasColumnName("id").HasDefaultValueSql("gen_random_uuid()");
+            entity.Property(row => row.Codigo).HasColumnName("codigo").HasMaxLength(40);
+            entity.Property(row => row.IdUsuario).HasColumnName("id_usuario");
+            entity.Property(row => row.IdRestaurante).HasColumnName("id_restaurante");
+            entity.Property(row => row.IdRoleRestaurante).HasColumnName("id_rol_restaurante");
+            entity.Property(row => row.Activo).HasColumnName("activo").HasDefaultValue(true);
+            entity.Property(row => row.FechaInicio).HasColumnName("fecha_inicio").HasColumnType("date");
+            entity.Property(row => row.FechaFin).HasColumnName("fecha_fin").HasColumnType("date");
+            entity.HasIndex(row => row.Codigo).IsUnique().HasDatabaseName("ux_asignaciones_restaurante_codigo");
+            entity.HasIndex(row => new { row.IdUsuario, row.IdRestaurante, row.IdRoleRestaurante }).IsUnique().HasDatabaseName("ux_asignaciones_restaurante_usuario_restaurante_rol");
+            entity.HasIndex(row => row.IdUsuario).HasDatabaseName("idx_asignaciones_restaurante_usuario");
+            entity.HasIndex(row => row.IdRestaurante).HasDatabaseName("idx_asignaciones_restaurante_restaurante");
+            entity.HasIndex(row => row.IdRoleRestaurante).HasDatabaseName("idx_asignaciones_restaurante_rol");
+            entity.HasIndex(row => row.Activo).HasDatabaseName("idx_asignaciones_restaurante_activo");
+            entity.HasOne<ApplicationUser>().WithMany().HasForeignKey(row => row.IdUsuario).HasConstraintName("fk_asignaciones_restaurante_usuarios");
+            entity.HasOne<Restaurante>().WithMany().HasForeignKey(row => row.IdRestaurante).HasConstraintName("fk_asignaciones_restaurante_restaurantes");
+            entity.HasOne<RoleRestaurante>().WithMany().HasForeignKey(row => row.IdRoleRestaurante).HasConstraintName("fk_asignaciones_restaurante_roles");
+        });
+
+        builder.Entity<AsignacionRestaurantePermiso>(entity =>
+        {
+            entity.ToTable("asignaciones_restaurante_permisos");
+            entity.HasKey(row => new { row.IdAsignacionRestaurante, row.IdPermisoRestaurante });
+            entity.Property(row => row.IdAsignacionRestaurante).HasColumnName("id_asignacion_restaurante");
+            entity.Property(row => row.IdPermisoRestaurante).HasColumnName("id_permiso_restaurante");
+            entity.Property(row => row.Permitido).HasColumnName("permitido").HasDefaultValue(true);
+            entity.HasIndex(row => row.IdPermisoRestaurante).HasDatabaseName("idx_asignaciones_restaurante_permisos_permiso");
+            entity.HasOne<AsignacionRestaurante>().WithMany().HasForeignKey(row => row.IdAsignacionRestaurante).HasConstraintName("fk_asignaciones_restaurante_permisos_asignaciones").OnDelete(DeleteBehavior.Cascade);
+            entity.HasOne<PermisoRestaurante>().WithMany().HasForeignKey(row => row.IdPermisoRestaurante).HasConstraintName("fk_asignaciones_restaurante_permisos_permisos").OnDelete(DeleteBehavior.Cascade);
         });
     }
 

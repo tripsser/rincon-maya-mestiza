@@ -23,6 +23,11 @@ DECLARE
     v_perm_inq_usuarios_invitar UUID := '23000000-0000-0000-0000-000000000005';
 
     v_restaurante_id UUID := '30000000-0000-0000-0000-000000000001';
+    v_rol_restaurante_id UUID := '30100000-0000-0000-0000-000000000001';
+    v_asignacion_restaurante_id UUID := '30200000-0000-0000-0000-000000000001';
+    v_perm_rest_admin UUID := '30300000-0000-0000-0000-000000000001';
+    v_perm_rest_menu UUID := '30300000-0000-0000-0000-000000000002';
+    v_perm_rest_reportes UUID := '30300000-0000-0000-0000-000000000003';
     v_entidad_fiscal_id UUID := '31000000-0000-0000-0000-000000000001';
     v_direccion_id UUID := '32000000-0000-0000-0000-000000000001';
     v_unidad_operativa_id UUID := '33000000-0000-0000-0000-000000000001';
@@ -182,6 +187,70 @@ BEGIN
         descripcion = EXCLUDED.descripcion,
         logo_url = EXCLUDED.logo_url,
         activo = EXCLUDED.activo;
+
+    INSERT INTO roles_restaurante (id, id_inquilino, codigo, nombre, descripcion, activo)
+    VALUES
+    (
+        v_rol_restaurante_id,
+        v_inquilino_id,
+        'ADMIN_RESTAURANTE',
+        'Administrador de restaurante',
+        'Administra configuracion, menu y reportes de una marca/restaurante',
+        TRUE
+    )
+    ON CONFLICT (id) DO UPDATE
+    SET codigo = EXCLUDED.codigo,
+        nombre = EXCLUDED.nombre,
+        descripcion = EXCLUDED.descripcion,
+        activo = EXCLUDED.activo;
+
+    INSERT INTO permisos_restaurante (id, codigo, nombre, descripcion)
+    VALUES
+        (v_perm_rest_admin, 'restaurante.configurar', 'Configurar restaurante', 'Permite configurar una marca/restaurante'),
+        (v_perm_rest_menu, 'restaurante.menu.administrar', 'Administrar menu', 'Permite administrar menu y productos de una marca/restaurante'),
+        (v_perm_rest_reportes, 'restaurante.reportes.ver', 'Ver reportes restaurante', 'Permite consultar reportes de una marca/restaurante')
+    ON CONFLICT (id) DO UPDATE
+    SET codigo = EXCLUDED.codigo,
+        nombre = EXCLUDED.nombre,
+        descripcion = EXCLUDED.descripcion;
+
+    INSERT INTO roles_restaurante_permisos (id_rol_restaurante, id_permiso_restaurante)
+    VALUES
+        (v_rol_restaurante_id, v_perm_rest_admin),
+        (v_rol_restaurante_id, v_perm_rest_menu),
+        (v_rol_restaurante_id, v_perm_rest_reportes)
+    ON CONFLICT DO NOTHING;
+
+    INSERT INTO asignaciones_restaurante
+    (
+        id,
+        codigo,
+        id_usuario,
+        id_restaurante,
+        id_rol_restaurante,
+        activo,
+        fecha_inicio,
+        fecha_fin
+    )
+    VALUES
+    (
+        v_asignacion_restaurante_id,
+        'ASIG-REST-ADMIN',
+        v_usuario_id,
+        v_restaurante_id,
+        v_rol_restaurante_id,
+        TRUE,
+        CURRENT_DATE,
+        NULL
+    )
+    ON CONFLICT (id) DO UPDATE
+    SET codigo = EXCLUDED.codigo,
+        id_usuario = EXCLUDED.id_usuario,
+        id_restaurante = EXCLUDED.id_restaurante,
+        id_rol_restaurante = EXCLUDED.id_rol_restaurante,
+        activo = EXCLUDED.activo,
+        fecha_inicio = EXCLUDED.fecha_inicio,
+        fecha_fin = EXCLUDED.fecha_fin;
 
     INSERT INTO entidades_fiscales
     (
@@ -392,8 +461,10 @@ COMMIT;
 -- IDs utiles para pruebas:
 --   id_usuario:          10000000-0000-0000-0000-000000000001
 --   id_inquilino:        20000000-0000-0000-0000-000000000001
+--   id_restaurante:      30000000-0000-0000-0000-000000000001
 --   id_unidad_operativa: 33000000-0000-0000-0000-000000000001
 --
 -- Headers para /api/me:
 --   X-Tenant-Id: 20000000-0000-0000-0000-000000000001
+--   X-Restaurant-Id: 30000000-0000-0000-0000-000000000001
 --   X-Operational-Unit-Id: 33000000-0000-0000-0000-000000000001
