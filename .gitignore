@@ -4,6 +4,10 @@ obj/
 **/bin/
 **/obj/
 .build-check/
+node_modules/
+dist/
+**/node_modules/
+**/dist/
 
 # IDE/user files
 .vs/

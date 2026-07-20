@@ -9,6 +9,7 @@ using RestauranteSaaS.Api.Application.Auth;
 using RestauranteSaaS.Api.Domain.Entities;
 using RestauranteSaaS.Api.Features.Auth;
 using RestauranteSaaS.Api.Features.Me;
+using RestauranteSaaS.Api.Features.Tenant;
 using RestauranteSaaS.Api.Infrastructure.Auth;
 using RestauranteSaaS.Api.Infrastructure.Persistence;
 using RestauranteSaaS.Api.Middleware;
@@ -107,5 +108,6 @@ app.UseAuthorization();
 
 app.MapAuthEndpoints();
 app.MapMeEndpoints();
+app.MapTenantRestaurantEndpoints();
 
 app.Run();

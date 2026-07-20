@@ -153,6 +153,144 @@ Implementar el primer slice funcional de autenticacion, sesion distribuida y con
 - En produccion se decidira despues si:
   - el build del frontend se sirve desde ASP.NET Core, o
   - frontend y API se despliegan separados.
+- Se creo el proyecto frontend `Norix.App` con Vite oficial y template React + TypeScript.
+- Se instalaron las dependencias acordadas:
+  - TanStack Query;
+  - Zustand;
+  - React Router;
+  - Tailwind CSS;
+  - Zod;
+  - Lucide React.
+- Se implemento el primer login visual de NORIX:
+  - identidad oscura corporativa;
+  - colores de marca: azul profundo, gris grafito, azul NORIX, verde NORIX, violeta y gris claro;
+  - login conectado a `POST /api/auth/login`;
+  - cookie httpOnly manejada por el backend;
+  - proxy de Vite `/api` hacia `http://localhost:5016` para desarrollo.
+- Se agrego una vista placeholder `/contexto` para el siguiente slice: selector de contexto de trabajo.
+- Validacion frontend:
+  - `npm.cmd run build` exitoso.
+  - `npm.cmd run lint` exitoso.
+- Se inicio el contexto tenant en `Norix.App`:
+  - `/contexto` muestra el primer shell administrativo de tenant.
+  - Sidebar contextual con secciones de Inicio, Directorio, Acceso, Actividad y Configuracion.
+  - Header con breadcrumb, acciones rapidas y contexto actual.
+  - Paneles de resumen para restaurantes, unidades operativas, usuarios y entidades fiscales.
+  - Panel derecho con contexto de trabajo, estructura del inquilino y sesion.
+  - Datos visuales temporales basados en el seed; falta conectar endpoints especificos del tenant.
+- Se rediseño `/contexto` para acercarlo a la referencia visual aprobada:
+  - portal oscuro corporativo tipo Azure/NORIX;
+  - sidebar denso con grupos administrativos;
+  - topbar con launcher/busqueda;
+  - tabs de recurso;
+  - tarjetas compactas;
+  - panel derecho con estructura jerarquica del inquilino;
+  - colores y atmosfera tomados de la identidad visual NORIX.
+- Validacion frontend despues del rediseño:
+  - `npm.cmd run build` exitoso.
+  - `npm.cmd run lint` exitoso.
+
+### CRUD tenant/restaurantes
+
+- Se inicio el primer CRUD real del contexto tenant: `Restaurantes / Marcas`.
+- Backend agregado:
+  - `GET /api/tenant/restaurantes`
+  - `GET /api/tenant/restaurantes/{id}`
+  - `POST /api/tenant/restaurantes`
+  - `PUT /api/tenant/restaurantes/{id}`
+  - `PATCH /api/tenant/restaurantes/{id}/estado`
+- El CRUD de restaurantes:
+  - requiere autenticacion;
+  - requiere contexto por `X-Tenant-Id`;
+  - filtra siempre por `ICurrentContext.TenantId`;
+  - valida duplicidad de `codigo` por inquilino;
+  - permite activar/desactivar logicamente con `activo`.
+- Frontend agregado:
+  - ruta `/tenant/restaurantes`;
+  - listado con busqueda y filtro por estado;
+  - panel lateral para crear/editar;
+  - accion para activar/desactivar;
+  - acceso rapido desde `/contexto`.
+- Decision temporal:
+  - el frontend usa el `id_inquilino` del seed como header `X-Tenant-Id`;
+  - pendiente reemplazarlo por el contexto activo real en Zustand cuando se implemente el selector de contexto.
+- Validacion despues del CRUD de restaurantes:
+  - `dotnet build RestauranteSaaS.Api\RestauranteSaaS.Api.csproj` exitoso.
+  - `npm.cmd run build` exitoso.
+  - `npm.cmd run lint` exitoso.
+- Error encontrado:
+  - algunos accesos visuales a `Restaurantes / Marcas` seguian siendo botones sin navegacion real.
+- Arreglo:
+  - el item del sidebar `Restaurantes / Marcas` ahora navega a `/tenant/restaurantes`;
+  - el `Ver todos` de la tarjeta `Restaurantes / Marcas` ahora navega a `/tenant/restaurantes`;
+  - el acceso rapido se mantiene apuntando a `/tenant/restaurantes`.
+- Validacion despues del arreglo de navegacion:
+  - `npm.cmd run build` exitoso.
+  - `npm.cmd run lint` exitoso.
+- Error de arquitectura UI encontrado:
+  - `/tenant/restaurantes` se habia implementado como pantalla independiente, rompiendo la filosofia tipo Azure acordada.
+- Arreglo:
+  - `/tenant/restaurantes` ahora vive dentro del mismo NORIX Portal;
+  - conserva sidebar contextual de tenant;
+  - conserva topbar/launcher;
+  - muestra breadcrumb `Inicio > Grupo Gourmet > Restaurantes / Marcas`;
+  - trata `Restaurantes / Marcas` como recurso activo del tenant, no como otra app;
+  - mantiene el CRUD dentro del area de contenido del recurso.
+- Validacion despues del ajuste tipo Azure:
+  - `npm.cmd run build` exitoso.
+  - `npm.cmd run lint` exitoso.
+- Ajuste de contexto anidado:
+  - al seleccionar una marca desde `/tenant/restaurantes`, ahora se abre `/tenant/restaurantes/{id}`;
+  - esta ruta representa el contexto `Restaurante / Marca`;
+  - el contexto restaurante/marca tiene su propio sidebar anidado:
+    - Informacion general;
+    - Sucursales;
+    - Usuarios;
+    - Roles y permisos;
+    - Configuracion.
+  - el sidebar incluye `Cambiar de nivel` para regresar al tenant `Grupo Gourmet`;
+  - el header mantiene breadcrumb `Inicio > Grupo Gourmet > Restaurante`;
+  - se conserva la filosofia tipo Azure: mismo portal, nuevo recurso activo, menu adaptado al recurso.
+- Validacion despues del contexto restaurante/marca:
+  - `npm.cmd run build` exitoso.
+  - `npm.cmd run lint` exitoso.
+- Ajuste de navegacion anidada:
+  - se agrego un rail lateral interno para el contexto `/tenant/restaurantes/{id}`;
+  - el patron visual queda:
+    - sidebar principal: nivel/portal actual;
+    - rail anidado: recurso abierto y menu especifico del recurso;
+    - contenido: administracion o informacion del recurso.
+  - la tabla de restaurantes ahora muestra una accion explicita `Abrir contexto`.
+- Correccion de flujo:
+  - `/tenant/restaurantes` representa la coleccion de restaurantes/marcas del tenant;
+  - la coleccion no debe mostrar menu anidado;
+  - el menu anidado aparece solamente al abrir un restaurante/marca especifico en `/tenant/restaurantes/{id}`;
+  - flujo correcto:
+
+```text
+Tenant
+  -> Restaurantes / Marcas  (coleccion, sin rail anidado)
+      -> Abrir contexto
+          -> Restaurante / Marca especifico  (con rail anidado)
+```
+- Validacion despues de navegacion anidada:
+  - `npm.cmd run build` exitoso.
+  - `npm.cmd run lint` exitoso.
+- Ajuste de visibilidad del patron tipo Azure:
+  - la navegacion anidada del recurso debe verse junto a la navegacion principal del tenant;
+  - no reemplaza la barra principal;
+  - se bajo el breakpoint del rail anidado de `2xl` a `xl` para que aparezca en desktop normal;
+  - el patron queda: sidebar principal NORIX/tenant + rail del recurso activo + contenido.
+- Validacion despues del ajuste de breakpoint:
+  - `npm.cmd run build` exitoso.
+  - `npm.cmd run lint` exitoso.
+- Limpieza visual en `/tenant/restaurantes`:
+  - se quitaron los subpaneles `Contexto actual` y `Directorio tenant`;
+  - la vista queda enfocada en sidebar principal tenant + tabla de coleccion;
+  - la tabla gana espacio horizontal y se reduce ruido visual.
+- Validacion despues de limpieza visual:
+  - `npm.cmd run build` exitoso.
+  - `npm.cmd run lint` exitoso.
 
 ## Decision autorizacion por restaurante
 
@@ -231,6 +369,353 @@ inquilino
   - contexto inquilino para administracion global;
   - contexto restaurante para administracion de marca/restaurante;
   - contexto unidad operativa para operacion diaria.
+
+## Diseno pendiente de NORIX Portal
+
+- Pendiente de implementacion. Esta seccion documenta direccion de producto para aterrizar interfaces antes de construirlas.
+- NORIX sera un portal unico basado en contexto, no tres aplicaciones separadas.
+- La filosofia principal es similar a Azure Portal / Entra: el usuario nunca sale del portal, solo cambia el recurso o contexto de trabajo.
+- El menu lateral cambia segun el recurso activo.
+- El concepto principal de UI sera `Contexto de trabajo`, no `Cambiar de nivel`.
+
+Principio base:
+
+```text
+NORIX Portal
+  -> contexto tenant
+  -> contexto restaurante / marca
+  -> contexto unidad operativa / sucursal
+```
+
+El usuario siempre debe poder ver:
+
+- tenant actual;
+- restaurante/marca actual, cuando aplique;
+- unidad operativa/sucursal actual, cuando aplique;
+- ruta/breadcrumb del contexto;
+- recurso activo;
+- opciones rapidas para cambiar de contexto.
+
+Cadena de contexto recomendada:
+
+```text
+Tenant: Grupo Gourmet
+  -> Restaurante / Marca: La Parrilla Grill
+      -> Unidad operativa / Sucursal: Centro
+```
+
+Cada elemento de la cadena debe ser clicable:
+
+- Click en tenant: vuelve al contexto tenant.
+- Click en restaurante/marca: abre el contexto de restaurante.
+- Click en unidad operativa/sucursal: abre el contexto operativo.
+
+### Recursos y contexto
+
+- Todo objeto administrable importante se tratara como recurso.
+- La jerarquia principal de recursos sera:
+
+```text
+Tenant
+  -> Restaurante / Marca
+      -> Unidad Operativa / Sucursal
+          -> Cocina
+          -> Caja
+          -> Mesas
+          -> Impresoras
+          -> Empleados
+          -> Inventario
+```
+
+- `Usuarios` no es un nivel jerarquico.
+- Usuarios debe tratarse como modulo de acceso, resultado de busqueda o acceso rapido, no como cuarto nivel.
+- El termino `recurso` se usara para arquitectura y navegacion; en operacion diaria se mantendran nombres humanos como mesas, comandas, caja, cocina y turnos.
+
+### Navigator
+
+- Se evaluara un `Navigator` fijo o colapsable arriba del sidebar.
+- El Navigator mostrara la estructura navegable del tenant, similar a un explorador:
+
+```text
+Grupo Gourmet
+  La Parrilla Grill
+    Centro
+    Norte
+    Sur
+  Cafe del Lago
+    Centro
+    Plaza
+  Pizza Factory
+    Centro
+    Norte
+```
+
+- Al hacer click en un tenant, restaurante o unidad operativa, cambia el contexto activo y el sidebar se adapta.
+- En vistas administrativas puede estar visible por defecto.
+- En operacion diaria puede estar colapsado o reducido para no estorbar flujos rapidos.
+
+### Buscador / launcher
+
+- La busqueda global debe funcionar como launcher, no solo como filtro.
+- Atajo propuesto: `Ctrl + K`.
+- Debe permitir saltar directamente a recursos permitidos por autorizacion:
+  - restaurantes;
+  - unidades operativas;
+  - usuarios;
+  - roles;
+  - productos;
+  - mesas;
+  - comandas;
+  - impresoras;
+  - cajas;
+  - empleados.
+- Los resultados deben filtrarse por permisos y contexto disponible.
+
+### Contexto tenant
+
+- El contexto tenant funcionara como centro de administracion corporativa del inquilino.
+- No representa operacion diaria del restaurante; representa gobierno, estructura y configuracion global.
+- Debe sentirse sobrio, corporativo y orientado a gestion:
+  - tablas;
+  - filtros;
+  - navegacion lateral;
+  - acciones claras;
+  - vistas densas pero legibles.
+- Puede mostrar unidades operativas, pero solo desde una vista administrativa global.
+- No debe mezclar flujos operativos como comandas, caja, cocina, turnos o impresion diaria.
+
+Roles tentativos de inquilino:
+
+- `OWNER`: acceso total al inquilino.
+- `ADMIN_TENANT`: administracion amplia sin necesariamente tocar propiedad o configuraciones criticas futuras.
+- `GESTOR_RESTAURANTES`: administra restaurantes, entidades fiscales, direcciones y unidades operativas.
+- `GESTOR_USUARIOS`: administra invitaciones, usuarios y asignaciones de roles.
+- `LECTOR_TENANT`: solo lectura global.
+
+Permisos tentativos de inquilino:
+
+- `inquilinos.ver`
+- `inquilinos.configurar`
+- `usuarios.ver`
+- `usuarios.invitar`
+- `usuarios.desactivar`
+- `usuarios.asignar_roles`
+- `roles_inquilino.ver`
+- `roles_inquilino.crear`
+- `roles_inquilino.editar`
+- `roles_inquilino.eliminar`
+- `roles_inquilino.asignar_permisos`
+- `restaurantes.ver`
+- `restaurantes.crear`
+- `restaurantes.editar`
+- `restaurantes.desactivar`
+- `entidades_fiscales.ver`
+- `entidades_fiscales.crear`
+- `entidades_fiscales.editar`
+- `entidades_fiscales.desactivar`
+- `direcciones.ver`
+- `direcciones.crear`
+- `direcciones.editar`
+- `direcciones.desactivar`
+- `unidades_operativas.ver`
+- `unidades_operativas.crear`
+- `unidades_operativas.editar`
+- `unidades_operativas.desactivar`
+- `auditoria.ver`
+- `configuracion_global.ver`
+- `configuracion_global.editar`
+
+Separacion de menu:
+
+- `Directorio` responde: que estructura existe.
+- `Acceso` responde: quien puede hacer que.
+- No mezclar directorio con permisos/asignaciones.
+
+Menu tentativo del contexto tenant:
+
+```text
+Inicio
+Directorio
+  Restaurantes / Marcas
+  Unidades operativas
+  Entidades fiscales
+  Direcciones
+Acceso
+  Usuarios
+  Roles
+  Permisos
+  Asignaciones
+Actividad
+  Auditoria
+  Sesiones
+Configuracion
+  General
+  Seguridad
+  Integraciones
+```
+
+Pendiente de implementacion en frontend:
+
+- Alinear el sidebar principal del contexto tenant exactamente con este menu.
+- El contexto tenant debe limitarse a administracion corporativa/global del inquilino.
+- El contexto tenant no debe mostrar flujos operativos diarios.
+- Elementos que no pertenecen al menu tenant:
+  - Comandas;
+  - Mesas;
+  - Cocina;
+  - Caja;
+  - Pagos;
+  - Cortes;
+  - Inventario;
+  - Impresoras;
+  - Agentes locales;
+  - Activos tecnologicos;
+  - Empleados operativos.
+- Separacion semantica:
+  - `Directorio`: que estructura existe;
+  - `Acceso`: quien puede hacer que;
+  - `Actividad`: que paso;
+  - `Configuracion`: como se comporta el inquilino.
+- Avance implementado:
+  - el sidebar de `/contexto` ya fue alineado con este menu tenant;
+  - el sidebar principal de `/tenant/restaurantes` ya fue alineado con este menu tenant;
+  - el sidebar principal que permanece visible dentro de `/tenant/restaurantes/{id}` ya fue alineado con este menu tenant;
+  - queda pendiente conectar rutas reales para cada opcion que aun no tiene CRUD.
+- Validacion despues de alinear menu tenant:
+  - `npm.cmd run build` exitoso.
+  - `npm.cmd run lint` exitoso.
+- Homologacion de barra de comandos:
+  - se creo el componente comun `CommandBar`;
+  - el orden fijo queda:
+    - `Agregar`;
+    - `Administrar`;
+    - `Actualizar`;
+    - `Exportar`.
+  - la barra mantiene mismo estilo, altura, iconos, separacion y posicion en:
+    - `/contexto`;
+    - `/tenant/restaurantes`;
+    - `/tenant/restaurantes/{id}`.
+  - el significado interno de `Agregar` depende del recurso actual, pero el control visual no cambia.
+- Validacion despues de homologar comandos:
+  - `npm.cmd run build` exitoso.
+  - `npm.cmd run lint` exitoso.
+- Sidebar tenant colapsable:
+  - se creo el componente comun `TenantSidebar`;
+  - el menu tenant se muestra colapsado para ahorrar espacio;
+  - al pasar el mouse sobre el sidebar, se despliega temporalmente;
+  - se agrego accion para fijar/desfijar el menu;
+  - el estado fijado se persiste en `localStorage` con la llave `norix.tenantSidebarPinned`;
+  - se reemplazaron sidebars duplicados por `TenantSidebar` en:
+    - `/contexto`;
+    - `/tenant/restaurantes`;
+    - `/tenant/restaurantes/{id}`.
+- Validacion despues del sidebar colapsable:
+  - `npm.cmd run build` exitoso.
+  - `npm.cmd run lint` exitoso.
+- Correccion visual del sidebar colapsable:
+  - se elimino el encimado del boton de menu/pin con el logo al contraerse;
+  - en modo colapsado el logo queda centrado y el boton de fijar aparece al expandirse;
+  - se estabilizo el icono del contexto tenant para que no brinque al expandir;
+  - los textos usan transicion de `max-width` y opacidad para evitar movimientos bruscos;
+  - los iconos del menu tienen ancho fijo.
+- Validacion despues de corregir movimiento del sidebar:
+  - `npm.cmd run build` exitoso.
+  - `npm.cmd run lint` exitoso.
+- Sucursales reales en contexto Restaurante / Marca:
+  - se elimino el mock estatico de sucursales en `/tenant/restaurantes/{id}`;
+  - se agrego endpoint `GET /api/tenant/restaurantes/{id}/sucursales`;
+  - el endpoint lee `unidades_operativas` filtrando por `ICurrentContext.TenantId` e `id_restaurante`;
+  - el frontend consulta las sucursales con TanStack Query;
+  - el overview de marca ahora calcula total, activas e inactivas desde la BD.
+- Validacion despues de conectar sucursales:
+  - `dotnet build RestauranteSaaS.Api\RestauranteSaaS.Api.csproj --output D:\tmp\norix-api-build-check` exitoso.
+  - `npm.cmd run build` exitoso.
+  - `npm.cmd run lint` exitoso.
+
+Menu tentativo del contexto restaurante / marca:
+
+```text
+Inicio
+Informacion general
+Sucursales
+Catalogo
+Acceso
+Actividad
+Configuracion
+```
+
+Definicion acordada para contexto Restaurante / Marca:
+
+- La pantalla principal sera `Informacion general`.
+- `Informacion general` funcionara como overview de marca/restaurante.
+- Debe mostrar:
+  - resumen de sucursales/unidades operativas de esa marca;
+  - usuarios/asignaciones de restaurante;
+  - ventas y ordenes agregadas de la marca cuando exista operacion;
+  - estado general;
+  - actividad reciente;
+  - accesos rapidos a sucursales, catalogo, productos, precios y roles.
+- Pestañas del recurso Restaurante / Marca:
+  - `Informacion general`;
+  - `Sucursales`;
+  - `Catalogo`;
+  - `Acceso`;
+  - `Actividad`;
+  - `Configuracion`.
+- Contenido por pestaña:
+  - `Informacion general`: resumen, KPIs agregados, actividad reciente, sucursales principales y alertas globales de marca.
+  - `Sucursales`: unidades operativas de la marca, crear sucursal, estado, region, direccion y entidad fiscal asociada.
+  - `Catalogo`: menus, categorias, productos, areas de preparacion y precios por sucursal cuando aplique.
+  - `Acceso`: usuarios con acceso a la marca, roles restaurante, permisos restaurante y asignaciones restaurante.
+  - `Actividad`: auditoria de cambios de la marca, eventos administrativos, cambios de catalogo y cambios de acceso.
+  - `Configuracion`: datos generales de la marca, logo, parametros comerciales, configuracion de impresion por areas y configuracion fiscal/comercial aplicable a la marca.
+- Elementos que no pertenecen al contexto Restaurante / Marca:
+  - Mesas;
+  - Comandas;
+  - Cocina;
+  - Caja;
+  - Pagos;
+  - Cortes.
+- Esos elementos pertenecen al contexto Unidad Operativa / Sucursal.
+- `Sucursales` sera la puerta para abrir el siguiente contexto:
+
+```text
+Restaurante / Marca
+  -> Unidad Operativa / Sucursal
+```
+
+Menu tentativo del contexto unidad operativa / sucursal:
+
+```text
+Inicio
+Operacion
+  Mesas
+  Comandas
+  Cocina
+  Caja
+  Pagos
+  Cortes
+Personal
+  Empleados
+  Roles operativos
+  Asignaciones operativas
+Dispositivos
+  Impresoras
+  Agentes locales
+  Activos tecnologicos
+Actividad
+  Eventos
+  Errores de impresion
+Configuracion
+  General
+  Areas locales
+```
+
+Elementos que quedan como futuros o no prioritarios:
+
+- Facturacion SaaS.
+- Etiquetas.
+- Portal raiz/superadmin para administrar multiples inquilinos.
 
 ## Estructura creada
 
@@ -374,6 +859,8 @@ X-Restaurant-Id: 99999999-9999-9999-9999-999999999999
 ## Pendientes
 
 - Actualizar `ConnectionStrings:Postgres` con el password/usuario real de la BD local.
+- Conectar el header `X-Tenant-Id` del frontend al contexto activo en Zustand; actualmente `/tenant/restaurantes` usa el tenant del seed para avanzar el slice.
+- Alinear seed/permisos finales para validar `restaurantes.ver`, `restaurantes.crear`, `restaurantes.editar` y `restaurantes.desactivar` desde backend.
 - Ejecutar:
 
 ```powershell
