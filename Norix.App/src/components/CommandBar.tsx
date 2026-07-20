@@ -1,5 +1,5 @@
 import type { ReactNode } from 'react'
-import { Download, Plus, RefreshCw, Settings } from 'lucide-react'
+import { Download, MessageSquareText, Plus, RefreshCw, Settings } from 'lucide-react'
 
 export function CommandBar({
   isRefreshing = false,
@@ -11,11 +11,11 @@ export function CommandBar({
   onRefresh?: () => void
 }) {
   return (
-    <div className="glass-toolbar flex flex-wrap items-center gap-1 rounded-lg p-1">
+    <div className="resource-commandbar flex flex-wrap items-center gap-1">
       <CommandButton icon={<Plus size={15} />} onClick={onAdd} primary>
         Agregar
       </CommandButton>
-      <CommandButton icon={<Settings size={15} />}>Administrar</CommandButton>
+      <CommandButton icon={<Settings size={15} />}>Administrar vistas</CommandButton>
       <CommandButton
         icon={<RefreshCw className={isRefreshing ? 'animate-spin' : undefined} size={15} />}
         onClick={onRefresh}
@@ -23,6 +23,7 @@ export function CommandBar({
         Actualizar
       </CommandButton>
       <CommandButton icon={<Download size={15} />}>Exportar</CommandButton>
+      <CommandButton icon={<MessageSquareText size={15} />}>Comentarios</CommandButton>
     </div>
   )
 }
@@ -40,15 +41,15 @@ function CommandButton({
 }) {
   return (
     <button
-      className={`inline-flex h-9 items-center gap-2 rounded-md px-3 text-sm transition ${
+      className={`resource-command flex h-8 items-center gap-2 px-2.5 text-sm transition ${
         primary
-          ? 'bg-gradient-to-r from-norix-green to-norix-blue font-semibold text-white'
-          : 'text-white/72 hover:bg-white/[0.07] hover:text-white'
+          ? 'font-semibold text-white'
+          : 'text-white/72 hover:text-white'
       }`}
       onClick={onClick}
       type="button"
     >
-      <span className={primary ? 'text-white' : 'text-norix-blue'}>{icon}</span>
+      <span className="text-norix-blue">{icon}</span>
       {children}
     </button>
   )

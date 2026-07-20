@@ -291,6 +291,40 @@ Tenant
 - Validacion despues de limpieza visual:
   - `npm.cmd run build` exitoso.
   - `npm.cmd run lint` exitoso.
+- Revision de pestanas en `Restaurantes / Marcas`:
+  - la ruta `/tenant/restaurantes` es una coleccion administrativa del tenant;
+  - no debe llevar pestanas porque todavia no se esta administrando un recurso especifico;
+  - se quitaron las pestanas de la coleccion para dejar la tabla mas limpia;
+  - las pestanas se conservan solamente al abrir una marca especifica en `/tenant/restaurantes/{id}`;
+  - las pestanas utiles del contexto `Restaurante / Marca` quedan alineadas a:
+    - `Informacion general`;
+    - `Sucursales`;
+    - `Catalogo`;
+    - `Acceso`;
+    - `Actividad`;
+    - `Configuracion`.
+- Validacion despues de revisar pestanas:
+  - `npm.cmd run build` exitoso.
+  - `npm.cmd run lint` exitoso.
+- Ajuste de acomodo visual tipo Azure:
+  - el header del recurso ahora prioriza breadcrumb, titulo, tipo de recurso, ID y barra de acciones;
+  - se quito el bloque explicativo grande del contexto tenant para acercarlo al patron de Azure Portal;
+  - `CommandBar` dejo de verse como card/botonera flotante y ahora se muestra como barra horizontal de acciones con separadores;
+  - las tabs del recurso quedan pegadas al bloque superior, como navegacion secundaria del recurso;
+  - el mismo acomodo se aplico a:
+    - `/contexto`;
+    - `/tenant/restaurantes`;
+    - `/tenant/restaurantes/{id}`.
+- Validacion despues del ajuste de acomodo:
+  - `npm.cmd run build` exitoso.
+  - `npm.cmd run lint` exitoso.
+- Ajuste de topbar:
+  - el buscador global quedo centrado en la barra superior;
+  - los iconos de acciones globales permanecen alineados a la derecha;
+  - se aplico en `/contexto`, `/tenant/restaurantes` y `/tenant/restaurantes/{id}`.
+- Validacion despues de centrar buscador:
+  - `npm.cmd run build` exitoso.
+  - `npm.cmd run lint` exitoso.
 
 ## Decision autorizacion por restaurante
 
@@ -576,6 +610,101 @@ Pendiente de implementacion en frontend:
   - `Acceso`: quien puede hacer que;
   - `Actividad`: que paso;
   - `Configuracion`: como se comporta el inquilino.
+
+### Shells segun alcance de autorizacion
+
+- La navegacion principal del portal dependera del alcance inicial autorizado del usuario.
+- La misma vista de recurso puede mostrarse dentro de una jerarquia superior o como raiz del usuario, segun sus permisos.
+- Un usuario con alcance global de tenant vera:
+
+```text
+TenantShell
+  -> recurso Restaurante / Marca abierto como rail anidado
+```
+
+- Un usuario con alcance solamente de restaurante/marca vera:
+
+```text
+RestaurantShell
+  -> Restaurante / Marca como contexto raiz
+```
+
+- En ese caso no vera el menu global del tenant, porque para ese usuario el tenant no es su espacio de trabajo administrable.
+- Un usuario con alcance operativo vera:
+
+```text
+OperationalShell
+  -> Unidad Operativa / Sucursal como contexto raiz
+```
+
+- Cada shell tendra su propio menu principal:
+  - `TenantShell`: gobierno corporativo, directorio, acceso, actividad y configuracion global del inquilino.
+  - `RestaurantShell`: informacion de marca, sucursales, catalogo, acceso de marca, actividad y configuracion de marca.
+  - `OperationalShell`: operacion diaria, mesas, comandas, cocina, caja, pagos, personal, dispositivos y configuracion local.
+- Los rails anidados se usaran cuando un usuario navegue hacia recursos hijos desde un shell superior.
+- Si el usuario inicia directamente en un alcance inferior, ese rail se convierte conceptualmente en su sidebar principal.
+- Esto evita duplicar pantallas:
+  - la vista de `Restaurante / Marca` debe poder renderizarse dentro de `TenantShell` o como raiz de `RestaurantShell`;
+  - la vista de `Unidad Operativa / Sucursal` debe poder renderizarse dentro de `RestaurantShell` o como raiz de `OperationalShell`.
+- La autorizacion manda la navegacion visible:
+  - no se mostraran niveles superiores que el usuario no pueda administrar;
+  - si necesita contexto informativo superior, se mostrara como breadcrumb o etiqueta de solo lectura, no como menu administrable.
+
+### Patron de edicion de recursos
+
+- NORIX usara tres patrones de edicion segun el peso de la accion.
+- Regla base:
+
+```text
+Edicion simple: panel lateral derecho
+Edicion compleja: vista principal del recurso
+Confirmacion corta: modal
+```
+
+- Panel lateral derecho:
+  - sera el patron por defecto para CRUDs y cambios simples;
+  - mantiene visible el contexto actual o la coleccion;
+  - aplica para editar nombre, codigo, descripcion, logo, estado, datos basicos, asignaciones simples o propiedades cortas;
+  - debe sentirse como una hoja lateral de recurso, no como modal flotante;
+  - debe incluir titulo claro, descripcion breve, acciones principales y botones de guardar/cancelar.
+- Vista principal del recurso:
+  - se usara para configuraciones pesadas o flujos de varias secciones;
+  - aplica para catalogos completos, permisos complejos, reglas de impresion, configuracion fiscal/comercial, onboarding de sucursal o flujos multi-paso;
+  - reemplaza el contenido principal, pero conserva el shell y el contexto activo.
+- Modal:
+  - se usara solo para confirmaciones cortas o acciones delicadas;
+  - aplica para desactivar, eliminar, revocar sesion, resetear password, cancelar cambios o confirmar acciones irreversibles;
+  - no se usara para formularios grandes.
+- Decision actual:
+  - el CRUD de `Restaurantes / Marcas` mantiene panel lateral derecho para crear/editar;
+  - mas adelante se pulira visualmente como hoja de recurso tipo Azure.
+- Avance implementado del patron:
+  - desde la coleccion `/tenant/restaurantes`, crear y editar se mantiene en panel lateral derecho;
+  - dentro del recurso `/tenant/restaurantes/{id}`, no existe pestana `Editar`;
+  - `Informacion basica` ahora tiene accion contextual `Editar`;
+  - la accion abre un panel lateral derecho con los campos editables del restaurante/marca;
+  - al guardar se actualiza el recurso por API y se refrescan el detalle y la coleccion;
+  - se mantiene la regla: editar es accion de seccion, no pestana del recurso.
+- Validacion despues de aplicar edicion contextual:
+  - `npm.cmd run build` exitoso.
+  - `npm.cmd run lint` exitoso.
+- Limpieza del overview de recurso:
+  - se quitaron los subpaneles laterales redundantes de `Informacion basica`;
+  - el overview de `/tenant/restaurantes/{id}` queda enfocado en datos reales del recurso;
+  - las acciones de sucursales/acceso se moveran a sus pestañas o secciones correspondientes cuando se implementen.
+- Validacion despues de limpiar subpaneles:
+  - `npm.cmd run build` exitoso.
+  - `npm.cmd run lint` exitoso.
+- Limpieza de metricas superiores en recurso:
+  - se quitaron los cards grandes de `Sucursales`, `Activas`, `Inactivas` y `Ventas`;
+  - esos datos no deben competir con la identidad del recurso en el overview;
+  - el estado y conteo de sucursales ahora se muestran como metadata compacta/chips dentro de `Informacion basica`;
+  - las metricas operativas se agregaran despues solamente cuando existan datos reales de operacion;
+  - arriba del recurso se reservara espacio para alertas accionables, no para KPIs decorativos.
+- Validacion despues de quitar metricas superiores:
+  - `npm.cmd run build` exitoso.
+  - `npm.cmd run lint` exitoso.
+
 - Avance implementado:
   - el sidebar de `/contexto` ya fue alineado con este menu tenant;
   - el sidebar principal de `/tenant/restaurantes` ya fue alineado con este menu tenant;
@@ -629,6 +758,23 @@ Pendiente de implementacion en frontend:
   - el overview de marca ahora calcula total, activas e inactivas desde la BD.
 - Validacion despues de conectar sucursales:
   - `dotnet build RestauranteSaaS.Api\RestauranteSaaS.Api.csproj --output D:\tmp\norix-api-build-check` exitoso.
+  - `npm.cmd run build` exitoso.
+  - `npm.cmd run lint` exitoso.
+- Overview de recurso estilo Azure:
+  - en `/tenant/restaurantes/{id}` se agrego seccion `Informacion basica`;
+  - muestra avatar/logo grande con inicial de la marca;
+  - muestra propiedades del recurso en formato de filas:
+    - Nombre;
+    - Codigo;
+    - Id del objeto;
+    - Id del inquilino;
+    - Estado;
+    - Logo URL;
+    - Sucursales totales;
+    - Sucursales activas.
+  - se agregaron cards laterales para estado de marca, sucursales y acceso;
+  - de momento se muestran todos los datos disponibles y despues se afinara que se conserva.
+- Validacion despues del overview estilo Azure:
   - `npm.cmd run build` exitoso.
   - `npm.cmd run lint` exitoso.
 

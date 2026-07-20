@@ -130,7 +130,7 @@ export function RestaurantsPage() {
         <section className="min-w-0 flex-1">
           <PortalTopBar />
 
-          <header className="glass-header border-b border-white/10 px-5 py-5 lg:px-6">
+          <header className="glass-header border-b border-white/10 px-5 pb-4 pt-4 lg:px-6">
             <div className="mb-4 flex flex-wrap items-center gap-2 text-sm text-white/46">
               <Link className="text-white/54 hover:text-white" to="/contexto">Inicio</Link>
               <ChevronRight size={14} className="text-white/28" />
@@ -139,44 +139,25 @@ export function RestaurantsPage() {
               <span className="text-white">Restaurantes / Marcas</span>
             </div>
 
-            <div className="flex flex-col gap-5 xl:flex-row xl:items-start xl:justify-between">
-              <div>
-                <div className="flex flex-wrap items-center gap-3">
-                  <h1 className="text-3xl font-semibold text-white">Restaurantes / Marcas</h1>
-                  <span className="rounded border border-norix-green/30 bg-norix-green/10 px-2 py-0.5 text-[0.68rem] font-semibold text-norix-green">
-                    Recurso tenant
-                  </span>
-                </div>
-                <p className="mt-2 max-w-2xl text-sm leading-6 text-white/58">
-                  Administra marcas del inquilino sin salir del portal. Al seleccionar una marca,
-                  el contexto cambia al recurso restaurante / marca.
-                </p>
+            <div className="mb-4">
+              <div className="flex flex-wrap items-center gap-3">
+                <h1 className="text-3xl font-semibold text-white">Restaurantes / Marcas</h1>
+                <span className="rounded border border-norix-green/30 bg-norix-green/10 px-2 py-0.5 text-[0.68rem] font-semibold text-norix-green">
+                  Recurso tenant
+                </span>
               </div>
-
-              <CommandBar
-                isRefreshing={restaurantsQuery.isFetching}
-                onAdd={openCreatePanel}
-                onRefresh={() => restaurantsQuery.refetch()}
-              />
+              <p className="mt-2 max-w-2xl text-sm leading-6 text-white/58">
+                Administra marcas del inquilino sin salir del portal. Al seleccionar una marca,
+                el contexto cambia al recurso restaurante / marca.
+              </p>
             </div>
+
+            <CommandBar
+              isRefreshing={restaurantsQuery.isFetching}
+              onAdd={openCreatePanel}
+              onRefresh={() => restaurantsQuery.refetch()}
+            />
           </header>
-
-          <div className="border-b border-white/10 bg-black/12 px-5 backdrop-blur-xl lg:px-6">
-            <div className="flex gap-6 overflow-x-auto">
-              {['Informacion general', 'Restaurantes', 'Actividad', 'Acceso', 'Configuracion'].map((tab, index) => (
-                <button
-                  className={`relative whitespace-nowrap py-3 text-sm ${
-                    index === 1 ? 'text-white' : 'text-white/54 hover:text-white'
-                  }`}
-                  key={tab}
-                  type="button"
-                >
-                  {tab}
-                  {index === 1 && <span className="absolute inset-x-0 bottom-0 h-0.5 rounded-full bg-norix-blue" />}
-                </button>
-              ))}
-            </div>
-          </div>
 
           <div className="p-5 lg:p-6">
             <section className="min-w-0 space-y-4">
@@ -374,15 +355,15 @@ export function RestaurantsPage() {
 
 function PortalTopBar() {
   return (
-    <header className="glass-topbar flex h-12 items-center justify-between px-5 lg:px-6">
-      <label className="glass-button hidden h-8 w-[34rem] max-w-[48vw] items-center gap-2 rounded-md px-3 text-xs text-white/38 lg:flex">
+    <header className="glass-topbar relative flex h-12 items-center justify-end px-5 lg:px-6">
+      <label className="glass-button absolute left-1/2 hidden h-8 w-[34rem] max-w-[48vw] -translate-x-1/2 items-center gap-2 rounded-md px-3 text-xs text-white/38 lg:flex">
         <Search size={14} />
         <input
           className="w-full border-0 bg-transparent text-xs text-white outline-none placeholder:text-white/34"
           placeholder="Buscar recursos, servicios y documentos (Ctrl+/)"
         />
       </label>
-      <div className="ml-auto flex items-center gap-4 text-white/56">
+      <div className="flex items-center gap-4 text-white/56">
         <Search size={17} className="lg:hidden" />
         <Bell size={17} />
         <Settings size={17} />

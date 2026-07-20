@@ -287,6 +287,33 @@ button {
   background: rgb(255 255 255 / 7%);
 }
 
+.resource-commandbar {
+  min-height: 2rem;
+}
+
+.resource-command {
+  position: relative;
+  border-radius: 0.25rem;
+}
+
+.resource-command:hover {
+  background: rgb(255 255 255 / 5.5%);
+}
+
+.resource-command + .resource-command {
+  margin-left: 0.25rem;
+}
+
+.resource-command + .resource-command::before {
+  content: '';
+  position: absolute;
+  left: -0.25rem;
+  top: 0.45rem;
+  width: 1px;
+  height: 1.1rem;
+  background: rgb(255 255 255 / 12%);
+}
+
 .context-chip {
   border-color: rgb(34 211 166 / 42%);
   box-shadow:

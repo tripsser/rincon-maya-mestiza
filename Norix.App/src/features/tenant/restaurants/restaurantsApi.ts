@@ -5,6 +5,7 @@ export const currentTenantId = '20000000-0000-0000-0000-000000000001'
 
 export const restaurantSchema = z.object({
   id: z.string(),
+  idInquilino: z.string().optional(),
   codigo: z.string(),
   nombre: z.string(),
   descripcion: z.string().nullable(),

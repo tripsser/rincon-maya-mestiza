@@ -4,10 +4,9 @@ import {
   Activity,
   Bell,
   Building2,
-  ChevronDown,
   ChevronRight,
   CircleHelp,
-  Fingerprint,
+  Copy,
   Landmark,
   MapPin,
   Search,
@@ -92,75 +91,29 @@ export function ContextPage() {
         <section className="min-w-0 flex-1">
           <TopBar />
 
-          <div className="glass-header border-b border-white/10 px-5 py-5 lg:px-6">
-            <div className="mb-5 grid gap-4 2xl:grid-cols-[11.5rem_minmax(0,1fr)_21rem_17rem]">
-              <div>
-                <div className="mb-2 flex items-center gap-2 text-xs font-bold uppercase tracking-[0.16em] text-norix-green">
-                  <span className="grid h-6 w-6 place-items-center rounded-full bg-norix-green text-sm text-[#06121b]">1</span>
-                  Cambio contexto
-                </div>
-                <button className="context-chip flex h-12 w-full items-center justify-between rounded-lg px-3 text-sm text-white">
-                  <span className="flex items-center gap-2">
-                    <Fingerprint size={16} className="text-norix-blue" />
-                    Cambiar contexto
-                  </span>
-                  <ChevronDown size={15} className="text-white/48" />
+          <div className="glass-header border-b border-white/10 px-5 pb-0 pt-4 lg:px-6">
+            <div className="mb-4 flex items-center gap-2 text-sm text-white/46">
+              <span>Inicio</span>
+              <ChevronRight size={14} className="text-white/28" />
+              <span className="font-medium text-white/78">{tenant.name} (Tenant)</span>
+            </div>
+
+            <div className="mb-4">
+              <div className="flex flex-wrap items-center gap-3">
+                <h1 className="text-3xl font-semibold text-white">{tenant.name}</h1>
+                <span className="rounded border border-norix-green/30 bg-norix-green/10 px-2 py-0.5 text-[0.68rem] font-semibold text-norix-green">
+                  Tenant
+                </span>
+              </div>
+              <p className="mt-2 flex flex-wrap items-center gap-2 text-sm text-white/48">
+                <span>ID: {tenant.id}</span>
+                <button className="text-white/42 hover:text-norix-blue" type="button" title="Copiar ID">
+                  <Copy size={14} />
                 </button>
-              </div>
-
-              <div>
-                <div className="mb-2 flex items-center justify-center gap-2 text-xs font-bold uppercase tracking-[0.16em] text-[#b06cff]">
-                  <span className="grid h-6 w-6 place-items-center rounded-full bg-[#b06cff] text-sm text-white">2</span>
-                  Ruta / jerarquia actual
-                </div>
-                <div className="breadcrumb-glass flex h-12 min-w-0 items-center gap-3 rounded-lg px-4 text-sm">
-                  <span className="text-white/54">Inicio</span>
-                  <ChevronRight size={14} className="text-white/28" />
-                  <span className="truncate text-white/70">{tenant.name}</span>
-                  <ChevronRight size={14} className="text-white/28" />
-                  <span className="truncate text-white">Tenant</span>
-                </div>
-              </div>
-
-              <div className="scope-glass rounded-lg px-4 py-3">
-                <p className="mb-2 text-[0.68rem] font-bold uppercase tracking-[0.18em] text-white/62">
-                  Alcance actual
-                </p>
-                <div className="grid grid-cols-2 gap-3 text-sm">
-                  <span className="flex items-center gap-2 text-white">
-                    <Building2 size={17} className="text-white/72" />
-                    Tenant
-                  </span>
-                  <span className="truncate text-white/62">{tenant.name}</span>
-                </div>
-              </div>
-
-              <div className="hidden items-start gap-3 2xl:flex">
-                <span className="grid h-7 w-7 place-items-center rounded-full bg-amber-300 text-sm font-bold text-[#15100a]">3</span>
-                <div>
-                  <p className="text-xs font-bold uppercase tracking-[0.16em] text-amber-300">Alcance especifico</p>
-                  <p className="mt-1 text-sm leading-5 text-white/58">Vista corporativa del inquilino activo.</p>
-                </div>
-              </div>
+              </p>
             </div>
 
-            <div className="flex flex-col gap-4 xl:flex-row xl:items-start xl:justify-between">
-              <div>
-                <div className="mb-2 flex items-center gap-2 text-xs text-white/40">
-                  <span>Inicio</span>
-                  <ChevronRight size={13} />
-                  <span>{tenant.name} (Tenant)</span>
-                </div>
-                <div className="flex flex-wrap items-center gap-3">
-                  <h1 className="text-2xl font-semibold text-white">{tenant.name}</h1>
-                  <span className="rounded border border-norix-green/30 bg-norix-green/10 px-2 py-0.5 text-[0.68rem] font-semibold text-norix-green">
-                    Tenant
-                  </span>
-                </div>
-                <p className="mt-1 text-xs text-white/46">ID: {tenant.id}</p>
-              </div>
-              <CommandBar />
-            </div>
+            <CommandBar />
           </div>
 
           <div className="border-b border-white/10 bg-black/12 px-5 backdrop-blur-xl lg:px-6">
@@ -274,8 +227,8 @@ export function ContextPage() {
 
 function TopBar() {
   return (
-    <header className="glass-topbar flex h-12 items-center justify-between px-5 lg:px-6">
-      <label className="glass-button hidden h-8 w-[34rem] max-w-[48vw] items-center gap-2 rounded-md px-3 text-xs text-white/38 lg:flex">
+    <header className="glass-topbar relative flex h-12 items-center justify-end px-5 lg:px-6">
+      <label className="glass-button absolute left-1/2 hidden h-8 w-[34rem] max-w-[48vw] -translate-x-1/2 items-center gap-2 rounded-md px-3 text-xs text-white/38 lg:flex">
         <Search size={14} />
         <input
           className="w-full border-0 bg-transparent text-xs text-white outline-none placeholder:text-white/34"
@@ -283,7 +236,7 @@ function TopBar() {
         />
       </label>
 
-      <div className="ml-auto flex items-center gap-4 text-white/56">
+      <div className="flex items-center gap-4 text-white/56">
         <Search size={17} className="lg:hidden" />
         <Bell size={17} />
         <Settings size={17} />
