@@ -87,12 +87,31 @@ Soluciones:
 
 ## Base de datos
 
-El compose levanta PostgreSQL vacio. Despues del primer deploy hay que aplicar migraciones y seed.
+El compose levanta PostgreSQL vacio. Para este primer despliegue la API puede aplicar migraciones y seed al arrancar:
+
+```text
+DATABASE_APPLY_MIGRATIONS_ON_STARTUP=true
+DATABASE_SEED_INITIAL_DATA_ON_STARTUP=true
+```
+
+Estos valores quedan `true` por defecto en `docker-compose.coolify.yml`.
+
+El seed inicial se copia dentro de la imagen del API como:
+
+```text
+/app/seeds/initial_multitenant.sql
+```
+
+El seed es idempotente para el demo porque usa `ON CONFLICT`, pero en cuanto empieces a guardar datos reales conviene apagarlo:
+
+```text
+DATABASE_SEED_INITIAL_DATA_ON_STARTUP=false
+```
 
 Opciones:
 
-- Ejecutar migraciones desde tu maquina apuntando al Postgres por tunel/VPN.
-- Agregar despues un job/servicio de migraciones.
+- Mantener migraciones al arranque durante desarrollo/staging.
+- Crear despues un job/servicio de migraciones.
 - Crear un pipeline de migraciones controlado para staging/produccion.
 
 Pendiente recomendado:

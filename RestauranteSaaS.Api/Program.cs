@@ -104,6 +104,35 @@ if (app.Environment.IsDevelopment())
     app.MapOpenApi();
 }
 
+await using (var scope = app.Services.CreateAsyncScope())
+{
+    var configuration = scope.ServiceProvider.GetRequiredService<IConfiguration>();
+    var logger = scope.ServiceProvider.GetRequiredService<ILoggerFactory>().CreateLogger("DatabaseStartup");
+    var dbContext = scope.ServiceProvider.GetRequiredService<AppDbContext>();
+
+    if (configuration.GetValue<bool>("Database:ApplyMigrationsOnStartup"))
+    {
+        logger.LogInformation("Applying database migrations.");
+        await dbContext.Database.MigrateAsync();
+    }
+
+    if (configuration.GetValue<bool>("Database:SeedInitialDataOnStartup"))
+    {
+        var seedPath = Path.Combine(AppContext.BaseDirectory, "seeds", "initial_multitenant.sql");
+
+        if (!File.Exists(seedPath))
+        {
+            logger.LogWarning("Initial seed file was not found at {SeedPath}.", seedPath);
+        }
+        else
+        {
+            logger.LogInformation("Applying initial multitenant seed.");
+            var seedSql = await File.ReadAllTextAsync(seedPath);
+            await dbContext.Database.ExecuteSqlRawAsync(seedSql);
+        }
+    }
+}
+
 app.UseAuthentication();
 app.UseMiddleware<SessionAuthenticationMiddleware>();
 app.UseMiddleware<OperationalContextMiddleware>();

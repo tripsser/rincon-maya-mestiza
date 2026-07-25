@@ -25,6 +25,8 @@ services:
       Jwt__CookieName: access_token
       Session__ExpirationMinutes: 15
       Session__KeyPrefix: session
+      Database__ApplyMigrationsOnStartup: ${DATABASE_APPLY_MIGRATIONS_ON_STARTUP:-true}
+      Database__SeedInitialDataOnStartup: ${DATABASE_SEED_INITIAL_DATA_ON_STARTUP:-true}
     depends_on:
       postgres:
         condition: service_healthy

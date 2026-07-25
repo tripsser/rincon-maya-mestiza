@@ -1606,6 +1606,12 @@ X-Restaurant-Id: 99999999-9999-9999-9999-999999999999
   - `SERVICE_PASSWORD_REDIS`;
   - `SERVICE_PASSWORD_64_JWT`.
 - Esto evita capturar manualmente `POSTGRES_PASSWORD`, `REDIS_PASSWORD` y `JWT_SIGNING_KEY`, y evita errores por variables duplicadas o vacias en la UI.
+- La API puede preparar la base de datos al arrancar:
+  - `Database__ApplyMigrationsOnStartup`;
+  - `Database__SeedInitialDataOnStartup`.
+- En Coolify ambos quedan activos por defecto para levantar el demo inicial sobre PostgreSQL vacio.
+- El seed `seed inicial entidades_multitenant.sql` se copia a la imagen del API en `/app/seeds/initial_multitenant.sql`.
+- El seed es idempotente para demo, pero debe apagarse cuando se empiecen a conservar datos reales.
 - Se agregaron archivos de despliegue:
   - `docker-compose.coolify.yml`
   - `RestauranteSaaS.Api/Dockerfile`
