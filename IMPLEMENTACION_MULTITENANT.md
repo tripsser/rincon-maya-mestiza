@@ -1601,6 +1601,11 @@ X-Restaurant-Id: 99999999-9999-9999-9999-999999999999
 - El frontend consume la API por ruta relativa `/api`; Nginx reenvia esas peticiones al servicio interno `api:8080`.
 - Esta decision evita CORS en la primera etapa y mantiene la cookie `httpOnly`, `Secure`, `SameSite=Strict` funcionando bajo el mismo origen publico.
 - PostgreSQL y Redis quedan privados dentro de la red del compose; no se recomienda exponerlos publicamente.
+- Los secretos de despliegue se generan con variables magicas de Coolify:
+  - `SERVICE_PASSWORD_POSTGRES`;
+  - `SERVICE_PASSWORD_REDIS`;
+  - `SERVICE_PASSWORD_64_JWT`.
+- Esto evita capturar manualmente `POSTGRES_PASSWORD`, `REDIS_PASSWORD` y `JWT_SIGNING_KEY`, y evita errores por variables duplicadas o vacias en la UI.
 - Se agregaron archivos de despliegue:
   - `docker-compose.coolify.yml`
   - `RestauranteSaaS.Api/Dockerfile`

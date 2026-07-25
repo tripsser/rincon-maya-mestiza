@@ -39,23 +39,28 @@ El API queda interno para el frontend:
 https://app.tudominio.com/api
 ```
 
-## Variables requeridas
+## Variables y secretos
 
-Configurar en Coolify:
+El compose usa variables magicas de Coolify para generar secretos estables del recurso:
 
-```env
+- `SERVICE_PASSWORD_POSTGRES`
+- `SERVICE_PASSWORD_REDIS`
+- `SERVICE_PASSWORD_64_JWT`
+
+Por eso no es necesario capturar manualmente `POSTGRES_PASSWORD`, `REDIS_PASSWORD` ni `JWT_SIGNING_KEY` en Coolify para el primer deploy. Si ya se agregaron variables duplicadas en la UI, se pueden borrar para evitar confusion.
+
+Valores fijos del primer despliegue:
+
+```text
 POSTGRES_DB=restaurante_saas
 POSTGRES_USER=norix
-POSTGRES_PASSWORD=CAMBIAR_PASSWORD
-REDIS_PASSWORD=CAMBIAR_PASSWORD_REDIS
 JWT_ISSUER=Norix
 JWT_AUDIENCE=Norix
-JWT_SIGNING_KEY=CAMBIAR_POR_UN_SECRETO_LARGO_DE_MINIMO_32_CARACTERES
 JWT_EXPIRATION_MINUTES=15
 SESSION_EXPIRATION_MINUTES=15
 ```
 
-`JWT_SIGNING_KEY` debe ser largo y secreto. No usar valores de desarrollo.
+Si despues se quieren secretos administrados manualmente, se puede cambiar el compose, pero para Coolify conviene dejar que genere y persista estos valores.
 
 ## Red interna
 
