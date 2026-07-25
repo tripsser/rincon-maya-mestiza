@@ -13,13 +13,13 @@ import {
   Settings,
   ShieldCheck,
   Store,
-  Sun,
   Users,
 } from 'lucide-react'
 import { Link } from 'react-router-dom'
-import { CommandBar } from '../../components/CommandBar'
-import { TenantSidebar } from '../../components/TenantSidebar'
-import { useAuthStore } from '../auth/authStore'
+import { useAuthStore } from '../../auth/model/authStore'
+import { CommandBar } from '../../../shared/ui/CommandBar'
+import { TenantSidebar } from '../../../shared/ui/TenantSidebar'
+import { ThemeToggle } from '../../../shared/ui/ThemeToggle'
 
 const tenant = {
   id: '3f2c8b90-7d0e-4c4a-a5e1-8f9b2cf1d7b8',
@@ -85,56 +85,57 @@ export function ContextPage() {
 
   return (
     <main className="norix-portal text-norix-light">
-      <div className="portal-shell flex min-h-screen">
+      <div className="portal-shell flex h-screen overflow-hidden">
         <TenantSidebar />
 
-        <section className="min-w-0 flex-1">
+        <section className="flex min-w-0 flex-1 flex-col overflow-hidden">
           <TopBar />
 
-          <div className="glass-header border-b border-white/10 px-5 pb-0 pt-4 lg:px-6">
-            <div className="mb-4 flex items-center gap-2 text-sm text-white/46">
-              <span>Inicio</span>
-              <ChevronRight size={14} className="text-white/28" />
-              <span className="font-medium text-white/78">{tenant.name} (Tenant)</span>
-            </div>
-
-            <div className="mb-4">
-              <div className="flex flex-wrap items-center gap-3">
-                <h1 className="text-3xl font-semibold text-white">{tenant.name}</h1>
-                <span className="rounded border border-norix-green/30 bg-norix-green/10 px-2 py-0.5 text-[0.68rem] font-semibold text-norix-green">
-                  Tenant
-                </span>
+          <div className="subtle-scrollbar min-h-0 flex-1 overflow-y-auto">
+            <div className="glass-header border-b border-white/10 px-5 pb-0 pt-4 lg:px-6">
+              <div className="mb-4 flex items-center gap-2 text-sm text-white/46">
+                <span>Inicio</span>
+                <ChevronRight size={14} className="text-white/28" />
+                <span className="font-medium text-white/78">{tenant.name} (Tenant)</span>
               </div>
-              <p className="mt-2 flex flex-wrap items-center gap-2 text-sm text-white/48">
-                <span>ID: {tenant.id}</span>
-                <button className="text-white/42 hover:text-norix-blue" type="button" title="Copiar ID">
-                  <Copy size={14} />
-                </button>
-              </p>
+
+              <div className="mb-4">
+                <div className="flex flex-wrap items-center gap-3">
+                  <h1 className="text-3xl font-semibold text-white">{tenant.name}</h1>
+                  <span className="rounded border border-norix-green/30 bg-norix-green/10 px-2 py-0.5 text-[0.68rem] font-semibold text-norix-green">
+                    Tenant
+                  </span>
+                </div>
+                <p className="mt-2 flex flex-wrap items-center gap-2 text-sm text-white/48">
+                  <span>ID: {tenant.id}</span>
+                  <button className="text-white/42 hover:text-norix-blue" type="button" title="Copiar ID">
+                    <Copy size={14} />
+                  </button>
+                </p>
+              </div>
+
+              <CommandBar />
             </div>
 
-            <CommandBar />
-          </div>
-
-          <div className="border-b border-white/10 bg-black/12 px-5 backdrop-blur-xl lg:px-6">
-            <div className="flex gap-6 overflow-x-auto">
-              {tabs.map((tab, index) => (
-                <button
-                  key={tab}
-                  className={`relative whitespace-nowrap py-3 text-sm ${
-                    index === 0 ? 'text-white' : 'text-white/54 hover:text-white'
-                  }`}
-                >
-                  {tab}
-                  {index === 0 && (
-                    <span className="absolute inset-x-0 bottom-0 h-0.5 rounded-full bg-norix-blue" />
-                  )}
-                </button>
-              ))}
+            <div className="border-b border-white/10 bg-black/12 px-5 backdrop-blur-xl lg:px-6">
+              <div className="flex gap-6 overflow-x-auto">
+                {tabs.map((tab, index) => (
+                  <button
+                    key={tab}
+                    className={`relative whitespace-nowrap py-3 text-sm ${
+                      index === 0 ? 'text-white' : 'text-white/54 hover:text-white'
+                    }`}
+                  >
+                    {tab}
+                    {index === 0 && (
+                      <span className="absolute inset-x-0 bottom-0 h-0.5 rounded-full bg-norix-blue" />
+                    )}
+                  </button>
+                ))}
+              </div>
             </div>
-          </div>
 
-          <div className="grid gap-4 p-5 lg:grid-cols-[minmax(0,1fr)_21rem] lg:p-6">
+            <div className="grid gap-4 p-5 lg:grid-cols-[minmax(0,1fr)_21rem] lg:p-6">
             <section className="min-w-0 space-y-4">
               <SectionTitle title="Resumen" />
 
@@ -218,6 +219,7 @@ export function ContextPage() {
                 </div>
               </PortalCard>
             </aside>
+            </div>
           </div>
         </section>
       </div>
@@ -241,7 +243,7 @@ function TopBar() {
         <Bell size={17} />
         <Settings size={17} />
         <CircleHelp size={17} />
-        <Sun size={17} />
+        <ThemeToggle />
         <button className="glass-button flex items-center gap-2 rounded-md px-3 py-1.5 text-xs text-white/72">
           <span className="grid h-5 w-5 place-items-center rounded bg-norix-blue/20 text-norix-blue">G</span>
           Portal global
@@ -322,10 +324,10 @@ function MexicoMapMock() {
     <div className="map-glass relative min-h-44 overflow-hidden rounded-md">
       <div className="absolute left-[18%] top-[30%] h-20 w-48 rounded-[60%_40%_50%_50%] bg-norix-blue/12 blur-sm" />
       <div className="absolute left-[34%] top-[42%] h-24 w-72 rounded-[45%_55%_50%_50%] bg-norix-blue/10 blur-sm" />
-      <span className="absolute left-[35%] top-[34%] h-4 w-4 rounded-full bg-norix-green shadow-[0_0_24px_#22d3a6]" />
-      <span className="absolute left-[48%] top-[54%] h-4 w-4 rounded-full bg-norix-green shadow-[0_0_24px_#22d3a6]" />
-      <span className="absolute left-[63%] top-[58%] h-4 w-4 rounded-full bg-norix-violet shadow-[0_0_24px_#7c4dff]" />
-      <span className="absolute left-[76%] top-[64%] h-4 w-4 rounded-full bg-norix-violet shadow-[0_0_24px_#7c4dff]" />
+      <span className="absolute left-[35%] top-[34%] h-4 w-4 rounded-full bg-norix-green shadow-[0_0_24px_rgb(var(--norix-rgb-green)/0.75)]" />
+      <span className="absolute left-[48%] top-[54%] h-4 w-4 rounded-full bg-norix-green shadow-[0_0_24px_rgb(var(--norix-rgb-green)/0.75)]" />
+      <span className="absolute left-[63%] top-[58%] h-4 w-4 rounded-full bg-norix-violet shadow-[0_0_24px_rgb(var(--norix-rgb-violet)/0.75)]" />
+      <span className="absolute left-[76%] top-[64%] h-4 w-4 rounded-full bg-norix-violet shadow-[0_0_24px_rgb(var(--norix-rgb-violet)/0.75)]" />
     </div>
   )
 }

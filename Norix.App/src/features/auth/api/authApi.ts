@@ -1,5 +1,5 @@
 import { z } from 'zod'
-import { apiFetch } from '../../lib/apiClient'
+import { apiFetch } from '../../../shared/api/apiClient'
 
 export const loginRequestSchema = z.object({
   email: z.email('Escribe un correo valido.'),

@@ -1,0 +1,66 @@
+services:
+  web:
+    build:
+      context: ./Norix.App
+      dockerfile: Dockerfile
+    depends_on:
+      - api
+    expose:
+      - "80"
+    restart: unless-stopped
+
+  api:
+    build:
+      context: .
+      dockerfile: RestauranteSaaS.Api/Dockerfile
+    environment:
+      ASPNETCORE_ENVIRONMENT: Production
+      ASPNETCORE_URLS: http://+:8080
+      ConnectionStrings__Postgres: Host=postgres;Port=5432;Database=${POSTGRES_DB:-restaurante_saas};Username=${POSTGRES_USER:-norix};Password=${POSTGRES_PASSWORD:?POSTGRES_PASSWORD_REQUIRED}
+      ConnectionStrings__Redis: redis:6379,password=${REDIS_PASSWORD:?REDIS_PASSWORD_REQUIRED},abortConnect=false
+      Jwt__Issuer: ${JWT_ISSUER:-Norix}
+      Jwt__Audience: ${JWT_AUDIENCE:-Norix}
+      Jwt__SigningKey: ${JWT_SIGNING_KEY:?JWT_SIGNING_KEY_REQUIRED}
+      Jwt__ExpirationMinutes: ${JWT_EXPIRATION_MINUTES:-15}
+      Jwt__CookieName: access_token
+      Session__ExpirationMinutes: ${SESSION_EXPIRATION_MINUTES:-15}
+      Session__KeyPrefix: session
+    depends_on:
+      postgres:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+    expose:
+      - "8080"
+    restart: unless-stopped
+
+  postgres:
+    image: postgres:16-alpine
+    environment:
+      POSTGRES_DB: ${POSTGRES_DB:-restaurante_saas}
+      POSTGRES_USER: ${POSTGRES_USER:-norix}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:?POSTGRES_PASSWORD_REQUIRED}
+    volumes:
+      - norix_postgres_data:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U ${POSTGRES_USER:-norix} -d ${POSTGRES_DB:-restaurante_saas}"]
+      interval: 10s
+      timeout: 5s
+      retries: 10
+    restart: unless-stopped
+
+  redis:
+    image: redis:7-alpine
+    command: ["redis-server", "--appendonly", "yes", "--requirepass", "${REDIS_PASSWORD:?REDIS_PASSWORD_REQUIRED}"]
+    volumes:
+      - norix_redis_data:/data
+    healthcheck:
+      test: ["CMD", "redis-cli", "-a", "${REDIS_PASSWORD:?REDIS_PASSWORD_REQUIRED}", "ping"]
+      interval: 10s
+      timeout: 5s
+      retries: 10
+    restart: unless-stopped
+
+volumes:
+  norix_postgres_data:
+  norix_redis_data:

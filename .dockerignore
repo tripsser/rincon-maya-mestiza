@@ -1,0 +1,16 @@
+.git
+.agents
+.codex
+**/bin
+**/obj
+**/node_modules
+**/dist
+**/.env
+**/.env.*
+**/*.Development.json
+**/*.local.json
+**/*.user
+**/*.suo
+**/.vs
+**/.vscode
+**/*.log

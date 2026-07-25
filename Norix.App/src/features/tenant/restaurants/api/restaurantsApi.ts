@@ -1,5 +1,5 @@
 import { z } from 'zod'
-import { apiFetch } from '../../../lib/apiClient'
+import { apiFetch } from '../../../../shared/api/apiClient'
 
 export const currentTenantId = '20000000-0000-0000-0000-000000000001'
 

@@ -11,10 +11,10 @@ import {
   ShieldCheck,
   TrendingUp,
 } from 'lucide-react'
-import { NorixMark } from '../../components/NorixMark'
-import { ApiError } from '../../lib/apiClient'
-import { login, loginRequestSchema } from './authApi'
-import { useAuthStore } from './authStore'
+import { ApiError } from '../../../shared/api/apiClient'
+import { NorixMark } from '../../../shared/ui/NorixMark'
+import { login, loginRequestSchema } from '../api/authApi'
+import { useAuthStore } from '../model/authStore'
 
 const seedCredentials = {
   email: 'admin@rinconmaya.test',

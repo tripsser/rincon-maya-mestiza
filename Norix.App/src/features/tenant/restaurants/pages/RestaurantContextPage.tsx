@@ -1,10 +1,9 @@
-import type { FormEvent, ReactNode } from 'react'
+import type { FormEvent } from 'react'
 import { useState } from 'react'
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
 import {
   Bell,
   Building2,
-  ChevronRight,
   CircleHelp,
   Copy,
   Edit3,
@@ -15,21 +14,24 @@ import {
   Settings,
   ShieldCheck,
   Store,
-  Sun,
   Users,
   X,
 } from 'lucide-react'
 import { Link, useParams } from 'react-router-dom'
-import { CommandBar } from '../../../components/CommandBar'
-import { TenantSidebar } from '../../../components/TenantSidebar'
-import { ApiError } from '../../../lib/apiClient'
+import { ApiError } from '../../../../shared/api/apiClient'
+import { CommandBar } from '../../../../shared/ui/CommandBar'
+import { ResourceRail } from '../../../../shared/ui/ResourceRail'
+import { ResourceHeader } from '../../../../shared/ui/ResourceHeader'
+import { TenantSidebar } from '../../../../shared/ui/TenantSidebar'
+import { ThemeToggle } from '../../../../shared/ui/ThemeToggle'
 import {
   getRestaurant,
   getRestaurantBranches,
+  getRestaurants,
   type UpsertRestaurantRequest,
   updateRestaurant,
   upsertRestaurantSchema,
-} from './restaurantsApi'
+} from '../api/restaurantsApi'
 
 const emptyForm: UpsertRestaurantRequest = {
   codigo: '',
@@ -119,63 +121,43 @@ export function RestaurantContextPage() {
 
   return (
     <main className="norix-portal text-norix-light">
-      <div className="portal-shell flex min-h-screen">
+      <div className="portal-shell flex h-screen overflow-hidden">
         <TenantSidebar />
 
-        <section className="min-w-0 flex-1">
+        <section className="flex min-w-0 flex-1 flex-col overflow-hidden">
           <PortalTopBar />
 
-          <div className="flex min-h-[calc(100vh-3rem)]">
-            <RestaurantResourceRail restaurantName={title} />
+          <div className="flex min-h-0 flex-1">
+            <RestaurantResourceRail restaurantId={id!} restaurantName={title} />
 
-            <div className="min-w-0 flex-1">
-          <header className="glass-header border-b border-white/10 px-5 pb-0 pt-4 lg:px-6">
-            <div className="mb-3 flex flex-wrap items-center gap-2 text-sm text-white/46">
-              <Link className="hover:text-white" to="/contexto">Inicio</Link>
-              <ChevronRight size={14} className="text-white/28" />
-              <Link className="hover:text-white" to="/contexto">Grupo Gourmet</Link>
-              <ChevronRight size={14} className="text-white/28" />
-              <span className="text-white">{title}</span>
-            </div>
-
-            <div className="mb-4">
-              <div className="flex flex-wrap items-center gap-3">
-                <h1 className="text-3xl font-semibold text-white">{title}</h1>
-                <span className="rounded border border-norix-green/30 bg-norix-green/10 px-2 py-0.5 text-[0.68rem] font-semibold text-norix-green">
-                  Restaurante / Marca
-                </span>
-              </div>
-              <p className="mt-2 flex flex-wrap items-center gap-2 text-sm text-white/48">
-                <span>ID: {restaurant?.id ?? id}</span>
-                <button className="text-white/42 hover:text-norix-blue" title="Copiar ID" type="button">
-                  <Copy size={14} />
-                </button>
-              </p>
-            </div>
-
-            <CommandBar
-              isRefreshing={restaurantQuery.isFetching || branchesQuery.isFetching}
-              onRefresh={() => {
-                restaurantQuery.refetch()
-                branchesQuery.refetch()
-              }}
-            />
-
-            <div className="mt-4 flex gap-6 overflow-x-auto">
-              {['Informacion general', 'Sucursales', 'Catalogo', 'Acceso', 'Actividad', 'Configuracion'].map((tab, index) => (
-                <button
-                  className={`relative whitespace-nowrap py-3 text-sm ${
-                    index === 0 ? 'text-white' : 'text-white/54 hover:text-white'
-                  }`}
-                  key={tab}
-                  type="button"
-                >
-                  {tab}
-                  {index === 0 && <span className="absolute inset-x-0 bottom-0 h-0.5 rounded-full bg-norix-blue" />}
-                </button>
-              ))}
-            </div>
-          </header>
+            <div className="subtle-scrollbar min-w-0 flex-1 overflow-y-auto">
+          <ResourceHeader
+            actions={
+              <CommandBar
+                isRefreshing={restaurantQuery.isFetching || branchesQuery.isFetching}
+                onRefresh={() => {
+                  restaurantQuery.refetch()
+                  branchesQuery.refetch()
+                }}
+              />
+            }
+            badge="Restaurante / Marca"
+            breadcrumbs={[
+              { label: 'Inicio', to: '/contexto' },
+              { label: 'Grupo Gourmet', to: '/contexto' },
+              { label: title },
+            ]}
+            id={restaurant?.id ?? id}
+            tabs={[
+              { label: 'Informacion general', active: true },
+              { label: 'Sucursales' },
+              { label: 'Catalogo' },
+              { label: 'Acceso' },
+              { label: 'Actividad' },
+              { label: 'Configuracion' },
+            ]}
+            title={title}
+          />
 
           <div className="space-y-4 p-5 lg:p-6">
             {error && (
@@ -199,7 +181,7 @@ export function RestaurantContextPage() {
               </div>
               <div className="grid gap-6 md:grid-cols-[9rem_minmax(0,1fr)]">
                 <div>
-                  <div className="grid h-36 w-36 place-items-center rounded-full bg-gradient-to-br from-norix-green/90 to-norix-blue/90 text-6xl font-semibold text-white shadow-[0_18px_55px_rgb(34_211_166/0.16)]">
+                  <div className="grid h-36 w-36 place-items-center rounded-full bg-gradient-to-br from-norix-green/90 to-norix-blue/90 text-6xl font-semibold text-white shadow-[0_18px_55px_rgb(var(--norix-rgb-green)/0.16)]">
                     {getInitial(title)}
                   </div>
                   <button className="mt-3 inline-flex items-center gap-2 text-xs text-norix-blue hover:text-white" type="button">
@@ -256,7 +238,7 @@ export function RestaurantContextPage() {
                 <h2 className="text-sm font-semibold text-white">Sucursales</h2>
                 <button className="text-xs text-norix-blue" type="button">Ver todas</button>
               </div>
-              <div className="overflow-hidden rounded-lg border border-white/10">
+              <div className="overflow-hidden rounded-md border border-white/10">
                 <table className="w-full min-w-[720px] border-collapse text-left text-sm">
                   <thead className="bg-white/[0.045] text-xs uppercase tracking-[0.14em] text-white/42">
                     <tr>
@@ -299,9 +281,12 @@ export function RestaurantContextPage() {
                           </span>
                         </td>
                         <td className="px-4 py-3 text-right">
-                          <button className="glass-button rounded-md px-2 py-1 text-xs text-norix-blue" type="button">
+                          <Link
+                            className="glass-button inline-flex rounded-md px-2 py-1 text-xs text-norix-blue"
+                            to={`/tenant/restaurantes/${id}/sucursales/${branch.id}`}
+                          >
                             Abrir
-                          </button>
+                          </Link>
                         </td>
                       </tr>
                     ))}
@@ -319,8 +304,8 @@ export function RestaurantContextPage() {
           </div>
 
           {isEditPanelOpen && (
-            <div className="fixed inset-0 z-20 bg-black/45 backdrop-blur-sm">
-              <aside className="glass-panel ml-auto flex h-full w-full max-w-xl flex-col rounded-none border-y-0 border-r-0 p-5">
+            <div className="side-drawer-backdrop fixed inset-0 z-20 bg-black/45 backdrop-blur-sm">
+              <aside className="side-drawer glass-panel ml-auto flex h-full w-full max-w-xl flex-col rounded-none border-y-0 border-r-0 p-5">
                 <div className="mb-6 flex items-start justify-between gap-4">
                   <div>
                     <p className="text-xs font-bold uppercase tracking-[0.22em] text-norix-green">
@@ -351,7 +336,7 @@ export function RestaurantContextPage() {
                     <label className="grid gap-2">
                       <span className="text-sm font-medium text-white/72">Descripcion</span>
                       <textarea
-                        className="min-h-28 rounded-lg border border-white/10 bg-white/[0.045] px-3 py-3 text-sm text-white outline-none focus:border-norix-green/60"
+                        className="min-h-28 rounded-md border border-white/10 bg-white/[0.045] px-3 py-3 text-sm text-white outline-none focus:border-norix-green/60"
                         onChange={(event) => setForm((current) => ({ ...current, descripcion: event.target.value }))}
                         placeholder="Descripcion corta de la marca"
                         value={form.descripcion}
@@ -462,7 +447,7 @@ function FormField({
     <label className="grid gap-2">
       <span className="text-sm font-medium text-white/72">{label}</span>
       <input
-        className="h-11 rounded-lg border border-white/10 bg-white/[0.045] px-3 text-sm text-white outline-none focus:border-norix-green/60"
+        className="h-11 rounded-md border border-white/10 bg-white/[0.045] px-3 text-sm text-white outline-none focus:border-norix-green/60"
         onChange={(event) => onChange(event.target.value)}
         placeholder={placeholder}
         value={value ?? ''}
@@ -471,50 +456,93 @@ function FormField({
   )
 }
 
-function RestaurantResourceRail({ restaurantName }: { restaurantName: string }) {
+export function RestaurantResourceRail({
+  compactOnChild = false,
+  restaurantId,
+  restaurantName,
+}: {
+  compactOnChild?: boolean
+  restaurantId: string
+  restaurantName: string
+}) {
+  const restaurantsQuery = useQuery({
+    queryKey: ['tenant-restaurants-switcher'],
+    queryFn: () => getRestaurants({ activo: true }),
+  })
+  const restaurantSwitcherItems = buildRestaurantSwitcherItems({
+    currentId: restaurantId,
+    currentName: restaurantName,
+    restaurants: restaurantsQuery.data ?? [],
+  })
+
   return (
-    <aside className="hidden w-56 shrink-0 border-r border-white/10 bg-black/16 p-3 backdrop-blur-xl xl:block">
-      <div className="context-chip mb-4 rounded-lg p-3">
-        <p className="text-[0.64rem] font-semibold uppercase tracking-[0.2em] text-white/34">
-          Contexto abierto
-        </p>
-        <div className="mt-3 flex items-center gap-3">
-          <span className="grid h-9 w-9 place-items-center rounded-md bg-norix-green/12 text-norix-green">
-            <Store size={18} />
-          </span>
-          <div className="min-w-0">
-            <p className="truncate text-sm font-semibold text-white">{restaurantName}</p>
-            <p className="text-xs text-white/40">Restaurante / Marca</p>
-          </div>
-        </div>
-      </div>
-
-      <nav className="space-y-1">
-        <SidebarItem active icon={<FileText size={17} />} label="Informacion general" />
-        <SidebarItem icon={<MapPin size={17} />} label="Sucursales" />
-        <SidebarItem icon={<Users size={17} />} label="Usuarios" />
-        <SidebarItem icon={<ShieldCheck size={17} />} label="Roles y permisos" />
-        <SidebarItem icon={<Settings size={17} />} label="Configuracion" />
-      </nav>
-
-      <div className="mt-6 border-t border-white/10 pt-4">
-        <p className="mb-2 text-[0.64rem] font-semibold uppercase tracking-[0.2em] text-white/34">
-          Cambiar de nivel
-        </p>
-        <Link className="flex items-center gap-3 rounded-md px-3 py-2 text-sm text-white/62 hover:bg-white/[0.04] hover:text-white" to="/tenant/restaurantes">
-          <Store size={16} className="text-norix-green" />
-          Restaurantes
-        </Link>
-        <Link className="mt-1 flex items-center gap-3 rounded-md px-3 py-2 text-sm text-white/62 hover:bg-white/[0.04] hover:text-white" to="/contexto">
-          <Building2 size={16} className="text-norix-blue" />
-          Grupo Gourmet
-        </Link>
-      </div>
-    </aside>
+    <ResourceRail
+      accent="green"
+      forceCompact={compactOnChild}
+      footer={
+        <>
+          <p className="mb-2 text-[0.64rem] font-semibold uppercase tracking-[0.2em] text-white/34">
+            Cambiar de nivel
+          </p>
+          <Link className="flex items-center gap-3 rounded-md px-3 py-2 text-sm text-white/62 hover:bg-white/[0.04] hover:text-white" to="/tenant/restaurantes">
+            <Store size={16} className="text-norix-green" />
+            Restaurantes
+          </Link>
+          <Link className="mt-1 flex items-center gap-3 rounded-md px-3 py-2 text-sm text-white/62 hover:bg-white/[0.04] hover:text-white" to="/contexto">
+            <Building2 size={16} className="text-norix-blue" />
+            Grupo Gourmet
+          </Link>
+        </>
+      }
+      icon={<Store size={18} />}
+      items={[
+        { icon: <FileText size={17} />, label: 'Informacion general', to: `/tenant/restaurantes/${restaurantId}` },
+        { icon: <MapPin size={17} />, label: 'Sucursales' },
+        { icon: <Users size={17} />, label: 'Usuarios' },
+        { icon: <ShieldCheck size={17} />, label: 'Roles y permisos' },
+        { icon: <Settings size={17} />, label: 'Configuracion' },
+      ]}
+      resourceKind="Restaurante / Marca"
+      storageKey="norix.restaurantRailPinned"
+      switcherItems={restaurantSwitcherItems}
+      switcherLabel="Cambiar restaurante / marca"
+      title={restaurantName}
+    />
   )
 }
 
-function PortalTopBar() {
+function buildRestaurantSwitcherItems({
+  currentId,
+  currentName,
+  restaurants,
+}: {
+  currentId: string
+  currentName: string
+  restaurants: Array<{ codigo: string; id: string; nombre: string }>
+}) {
+  const items = restaurants.map((restaurant) => ({
+    active: restaurant.id === currentId,
+    detail: restaurant.codigo,
+    label: restaurant.nombre,
+    to: `/tenant/restaurantes/${restaurant.id}`,
+  }))
+
+  if (items.some((item) => item.to.endsWith(currentId))) {
+    return items
+  }
+
+  return [
+    {
+      active: true,
+      detail: 'Actual',
+      label: currentName,
+      to: `/tenant/restaurantes/${currentId}`,
+    },
+    ...items,
+  ]
+}
+
+export function PortalTopBar() {
   return (
     <header className="glass-topbar relative flex h-12 items-center justify-end px-5 lg:px-6">
       <label className="glass-button absolute left-1/2 hidden h-8 w-[34rem] max-w-[48vw] -translate-x-1/2 items-center gap-2 rounded-md px-3 text-xs text-white/38 lg:flex">
@@ -529,26 +557,12 @@ function PortalTopBar() {
         <Bell size={17} />
         <Settings size={17} />
         <CircleHelp size={17} />
-        <Sun size={17} />
+        <ThemeToggle />
         <button className="glass-button flex items-center gap-2 rounded-md px-3 py-1.5 text-xs text-white/72" type="button">
           <span className="grid h-5 w-5 place-items-center rounded bg-norix-blue/20 text-norix-blue">G</span>
           Portal global
         </button>
       </div>
     </header>
-  )
-}
-
-function SidebarItem({ active = false, icon, label }: { active?: boolean; icon: ReactNode; label: string }) {
-  return (
-    <button
-      className={`flex w-full items-center gap-3 rounded-md px-3 py-2 text-left text-sm transition ${
-        active ? 'nav-active text-white' : 'text-white/58 hover:bg-white/[0.04] hover:text-white'
-      }`}
-      type="button"
-    >
-      <span className={active ? 'text-norix-green' : 'text-white/42'}>{icon}</span>
-      <span className="truncate">{label}</span>
-    </button>
   )
 }

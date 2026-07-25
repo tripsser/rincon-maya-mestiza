@@ -5,21 +5,36 @@ import {
   Bell,
   Building2,
   CheckCircle2,
-  ChevronRight,
   CircleHelp,
   Edit3,
-  Search,
+  ExternalLink,
+  MoreHorizontal,
   Settings,
+  Search,
   Store,
-  Sun,
   ToggleLeft,
   ToggleRight,
-  X,
 } from 'lucide-react'
 import { Link } from 'react-router-dom'
-import { CommandBar } from '../../../components/CommandBar'
-import { TenantSidebar } from '../../../components/TenantSidebar'
-import { ApiError } from '../../../lib/apiClient'
+import { ApiError } from '../../../../shared/api/apiClient'
+import { CommandBar } from '../../../../shared/ui/CommandBar'
+import {
+  DataTableBody,
+  DataTableCell,
+  DataTableCheckbox,
+  DataTableFilterButton,
+  DataTableFooter,
+  DataTableHead,
+  DataTableHeader,
+  DataTableMessageRow,
+  DataTableRow,
+  DataTableShell,
+} from '../../../../shared/ui/DataTable'
+import { ResourceHeader } from '../../../../shared/ui/ResourceHeader'
+import { SideDrawer } from '../../../../shared/ui/SideDrawer'
+import { StatusBadge } from '../../../../shared/ui/StatusBadge'
+import { TenantSidebar } from '../../../../shared/ui/TenantSidebar'
+import { ThemeToggle } from '../../../../shared/ui/ThemeToggle'
 import {
   createRestaurant,
   getRestaurants,
@@ -28,13 +43,19 @@ import {
   updateRestaurant,
   updateRestaurantStatus,
   upsertRestaurantSchema,
-} from './restaurantsApi'
+} from '../api/restaurantsApi'
 
 const emptyForm: UpsertRestaurantRequest = {
   codigo: '',
   nombre: '',
   descripcion: '',
   logoUrl: '',
+}
+
+const statusLabel = {
+  active: 'Activos',
+  all: 'Todos',
+  inactive: 'Inactivos',
 }
 
 export function RestaurantsPage() {
@@ -122,44 +143,48 @@ export function RestaurantsPage() {
     saveMutation.mutate(parsed.data)
   }
 
+  function cycleStatusFilter() {
+    setStatus((current) => {
+      if (current === 'all') {
+        return 'active'
+      }
+
+      if (current === 'active') {
+        return 'inactive'
+      }
+
+      return 'all'
+    })
+  }
+
   return (
     <main className="norix-portal text-norix-light">
-      <div className="portal-shell flex min-h-screen">
+      <div className="portal-shell flex h-screen overflow-hidden">
         <TenantSidebar />
 
-        <section className="min-w-0 flex-1">
+        <section className="flex min-w-0 flex-1 flex-col overflow-hidden">
           <PortalTopBar />
 
-          <header className="glass-header border-b border-white/10 px-5 pb-4 pt-4 lg:px-6">
-            <div className="mb-4 flex flex-wrap items-center gap-2 text-sm text-white/46">
-              <Link className="text-white/54 hover:text-white" to="/contexto">Inicio</Link>
-              <ChevronRight size={14} className="text-white/28" />
-              <Link className="text-white/70 hover:text-white" to="/contexto">Grupo Gourmet</Link>
-              <ChevronRight size={14} className="text-white/28" />
-              <span className="text-white">Restaurantes / Marcas</span>
-            </div>
-
-            <div className="mb-4">
-              <div className="flex flex-wrap items-center gap-3">
-                <h1 className="text-3xl font-semibold text-white">Restaurantes / Marcas</h1>
-                <span className="rounded border border-norix-green/30 bg-norix-green/10 px-2 py-0.5 text-[0.68rem] font-semibold text-norix-green">
-                  Recurso tenant
-                </span>
-              </div>
-              <p className="mt-2 max-w-2xl text-sm leading-6 text-white/58">
-                Administra marcas del inquilino sin salir del portal. Al seleccionar una marca,
-                el contexto cambia al recurso restaurante / marca.
-              </p>
-            </div>
-
-            <CommandBar
-              isRefreshing={restaurantsQuery.isFetching}
-              onAdd={openCreatePanel}
-              onRefresh={() => restaurantsQuery.refetch()}
+          <div className="subtle-scrollbar min-h-0 flex-1 overflow-y-auto">
+            <ResourceHeader
+              actions={
+                <CommandBar
+                  isRefreshing={restaurantsQuery.isFetching}
+                  onAdd={openCreatePanel}
+                  onRefresh={() => restaurantsQuery.refetch()}
+                />
+              }
+              badge="Recurso tenant"
+              breadcrumbs={[
+                { label: 'Inicio', to: '/contexto' },
+                { label: 'Grupo Gourmet', to: '/contexto' },
+                { label: 'Restaurantes / Marcas' },
+              ]}
+              description="Administra marcas del inquilino sin salir del portal. Al seleccionar una marca, el contexto cambia al recurso restaurante / marca."
+              title="Restaurantes / Marcas"
             />
-          </header>
 
-          <div className="p-5 lg:p-6">
+            <div className="p-5 lg:p-6">
             <section className="min-w-0 space-y-4">
               <div className="grid gap-3 md:grid-cols-3">
                 <SummaryCard icon={<Store size={19} />} label="Total" value={restaurants.length.toString()} />
@@ -168,56 +193,59 @@ export function RestaurantsPage() {
               </div>
 
               <section className="glass-panel p-4">
-          <div className="mb-4 flex flex-col gap-3 xl:flex-row xl:items-center xl:justify-between">
-            <label className="glass-button flex h-10 min-w-0 items-center gap-2 rounded-lg px-3 xl:w-96">
-              <Search size={16} className="text-white/38" />
-              <input
-                className="w-full border-0 bg-transparent text-sm text-white outline-none placeholder:text-white/34"
-                onChange={(event) => setSearch(event.target.value)}
-                placeholder="Buscar por codigo, nombre o descripcion"
-                value={search}
-              />
-            </label>
-
-            <div className="glass-button flex h-10 w-fit rounded-lg p-1">
-              <StatusButton active={status === 'all'} onClick={() => setStatus('all')}>Todos</StatusButton>
-              <StatusButton active={status === 'active'} onClick={() => setStatus('active')}>Activos</StatusButton>
-              <StatusButton active={status === 'inactive'} onClick={() => setStatus('inactive')}>Inactivos</StatusButton>
-            </div>
-          </div>
-
-          <div className="overflow-hidden rounded-lg border border-white/10">
-            <table className="w-full min-w-[760px] border-collapse text-left text-sm">
-              <thead className="bg-white/[0.045] text-xs uppercase tracking-[0.14em] text-white/42">
+          <DataTableShell
+            footer={<DataTableFooter itemLabel="row(s)" pageCount={10} selected={0} total={restaurants.length || 100} />}
+            minWidth={940}
+            toolbar={
+              <div className="flex flex-col gap-3 lg:flex-row lg:items-center lg:justify-between">
+                <div className="flex flex-wrap items-center gap-2">
+                  <label className="flex h-8 w-64 items-center rounded-md border border-white/12 bg-white/[0.035] px-3">
+                    <input
+                      className="w-full border-0 bg-transparent text-sm text-white outline-none placeholder:text-white/50"
+                      onChange={(event) => setSearch(event.target.value)}
+                      placeholder="Filter restaurantes..."
+                      value={search}
+                    />
+                  </label>
+                  <DataTableFilterButton onClick={cycleStatusFilter}>
+                    Status: {statusLabel[status]}
+                  </DataTableFilterButton>
+                  <DataTableFilterButton>Tipo</DataTableFilterButton>
+                </div>
+                <button className="data-table-filter-button" type="button">
+                  View
+                </button>
+              </div>
+            }
+          >
+              <DataTableHeader>
                 <tr>
-                  <th className="px-4 py-3 font-semibold">Codigo</th>
-                  <th className="px-4 py-3 font-semibold">Restaurante / Marca</th>
-                  <th className="px-4 py-3 font-semibold">Descripcion</th>
-                  <th className="px-4 py-3 font-semibold">Estado</th>
-                  <th className="px-4 py-3 text-right font-semibold">Acciones</th>
+                  <DataTableHead>
+                    <DataTableCheckbox />
+                  </DataTableHead>
+                  <DataTableHead>Codigo</DataTableHead>
+                  <DataTableHead>Restaurante / Marca</DataTableHead>
+                  <DataTableHead>Descripcion</DataTableHead>
+                  <DataTableHead>Estado</DataTableHead>
+                  <DataTableHead align="right" />
                 </tr>
-              </thead>
-              <tbody className="divide-y divide-white/8">
+              </DataTableHeader>
+              <DataTableBody>
                 {restaurantsQuery.isLoading && (
-                  <tr>
-                    <td className="px-4 py-8 text-center text-white/48" colSpan={5}>
-                      Cargando restaurantes...
-                    </td>
-                  </tr>
+                  <DataTableMessageRow colSpan={6}>Cargando restaurantes...</DataTableMessageRow>
                 )}
 
                 {!restaurantsQuery.isLoading && restaurants.length === 0 && (
-                  <tr>
-                    <td className="px-4 py-8 text-center text-white/48" colSpan={5}>
-                      No hay restaurantes para este filtro.
-                    </td>
-                  </tr>
+                  <DataTableMessageRow colSpan={6}>No hay restaurantes para este filtro.</DataTableMessageRow>
                 )}
 
                 {restaurants.map((restaurant) => (
-                  <tr key={restaurant.id} className="bg-white/[0.015] hover:bg-white/[0.04]">
-                    <td className="px-4 py-3 font-semibold text-norix-green">{restaurant.codigo}</td>
-                    <td className="px-4 py-3">
+                  <DataTableRow key={restaurant.id}>
+                    <DataTableCell>
+                      <DataTableCheckbox />
+                    </DataTableCell>
+                    <DataTableCell className="font-semibold text-norix-green">{restaurant.codigo}</DataTableCell>
+                    <DataTableCell>
                       <Link
                         className="font-medium text-white hover:text-norix-green"
                         to={`/tenant/restaurantes/${restaurant.id}`}
@@ -225,28 +253,23 @@ export function RestaurantsPage() {
                         {restaurant.nombre}
                       </Link>
                       <div className="text-xs text-white/34">{restaurant.id}</div>
-                    </td>
-                    <td className="max-w-md px-4 py-3 text-white/56">
+                    </DataTableCell>
+                    <DataTableCell className="max-w-md text-white/56">
                       {restaurant.descripcion || 'Sin descripcion'}
-                    </td>
-                    <td className="px-4 py-3">
-                      <span
-                        className={`rounded-full border px-2.5 py-1 text-xs font-semibold ${
-                          restaurant.activo
-                            ? 'border-norix-green/24 bg-norix-green/10 text-norix-green'
-                            : 'border-white/10 bg-white/[0.04] text-white/42'
-                        }`}
-                      >
+                    </DataTableCell>
+                    <DataTableCell>
+                      <StatusBadge tone={restaurant.activo ? 'green' : 'neutral'}>
                         {restaurant.activo ? 'Activo' : 'Inactivo'}
-                      </span>
-                    </td>
-                    <td className="px-4 py-3">
+                      </StatusBadge>
+                    </DataTableCell>
+                    <DataTableCell align="right">
                       <div className="flex justify-end gap-2">
                         <Link
-                          className="glass-button inline-flex h-9 items-center rounded-md px-3 text-xs font-semibold text-norix-green"
+                          className="glass-button inline-flex h-9 items-center gap-2 rounded-md px-3 text-xs font-semibold text-norix-green"
                           to={`/tenant/restaurantes/${restaurant.id}`}
                         >
-                          Abrir contexto
+                          <ExternalLink size={14} />
+                          Abrir
                         </Link>
                         <button
                           className="glass-button grid h-9 w-9 place-items-center rounded-md text-norix-blue"
@@ -267,13 +290,19 @@ export function RestaurantsPage() {
                         >
                           {restaurant.activo ? <ToggleRight size={18} /> : <ToggleLeft size={18} />}
                         </button>
+                        <button
+                          className="grid h-9 w-9 place-items-center rounded-md text-white/56 hover:bg-white/[0.05] hover:text-white"
+                          title="Mas acciones"
+                          type="button"
+                        >
+                          <MoreHorizontal size={17} />
+                        </button>
                       </div>
-                    </td>
-                  </tr>
+                    </DataTableCell>
+                  </DataTableRow>
                 ))}
-              </tbody>
-            </table>
-          </div>
+              </DataTableBody>
+          </DataTableShell>
 
           {loadError && (
             <p className="mt-4 rounded-md border border-red-400/20 bg-red-400/10 px-3 py-2 text-sm text-red-200">
@@ -282,26 +311,18 @@ export function RestaurantsPage() {
           )}
               </section>
             </section>
+            </div>
           </div>
 
         {isPanelOpen && (
-          <div className="fixed inset-0 z-20 bg-black/45 backdrop-blur-sm">
-            <aside className="glass-panel ml-auto flex h-full w-full max-w-xl flex-col rounded-none border-y-0 border-r-0 p-5">
-              <div className="mb-6 flex items-start justify-between gap-4">
-                <div>
-                  <p className="text-xs font-bold uppercase tracking-[0.22em] text-norix-green">
-                    {editingRestaurant ? 'Editar recurso' : 'Nuevo recurso'}
-                  </p>
-                  <h2 className="mt-2 text-2xl font-semibold text-white">
-                    {editingRestaurant ? editingRestaurant.nombre : 'Restaurante / Marca'}
-                  </h2>
-                </div>
-                <button className="glass-button grid h-9 w-9 place-items-center rounded-md" onClick={closePanel} type="button">
-                  <X size={17} />
-                </button>
-              </div>
-
-              <form className="grid gap-4" onSubmit={handleSubmit}>
+          <SideDrawer
+            eyebrow={editingRestaurant ? 'Editar recurso' : 'Nuevo recurso'}
+            onClose={closePanel}
+            subtitle={editingRestaurant ? 'Restaurante / Marca' : undefined}
+            title={editingRestaurant ? editingRestaurant.nombre : 'Restaurante / Marca'}
+          >
+              <form className="flex min-h-0 flex-1 flex-col" onSubmit={handleSubmit}>
+                <div className="grid flex-1 content-start gap-4 overflow-y-auto pr-1">
                 <FormField
                   label="Codigo"
                   onChange={(value) => setForm((current) => ({ ...current, codigo: value }))}
@@ -317,7 +338,7 @@ export function RestaurantsPage() {
                 <label className="grid gap-2">
                   <span className="text-sm font-medium text-white/72">Descripcion</span>
                   <textarea
-                    className="min-h-28 rounded-lg border border-white/10 bg-white/[0.045] px-3 py-3 text-sm text-white outline-none focus:border-norix-green/60"
+                    className="min-h-28 rounded-md border border-white/10 bg-white/[0.045] px-3 py-3 text-sm text-white outline-none focus:border-norix-green/60"
                     onChange={(event) => setForm((current) => ({ ...current, descripcion: event.target.value }))}
                     placeholder="Descripcion corta de la marca"
                     value={form.descripcion}
@@ -335,17 +356,26 @@ export function RestaurantsPage() {
                     {formError}
                   </p>
                 )}
+                </div>
 
+                <div className="mt-5 flex justify-end gap-3 border-t border-white/10 pt-4">
+                  <button
+                    className="glass-button h-10 rounded-md px-4 text-sm text-white/72 hover:text-white"
+                    onClick={closePanel}
+                    type="button"
+                  >
+                    Cancelar
+                  </button>
                 <button
-                  className="mt-2 inline-flex h-11 items-center justify-center gap-2 rounded-lg bg-gradient-to-r from-norix-green to-norix-blue px-4 text-sm font-bold text-white disabled:cursor-wait disabled:opacity-60"
+                  className="inline-flex h-10 items-center justify-center rounded-md bg-gradient-to-r from-norix-green to-norix-blue px-4 text-sm font-bold text-white disabled:cursor-wait disabled:opacity-60"
                   disabled={saveMutation.isPending}
                   type="submit"
                 >
                   {saveMutation.isPending ? 'Guardando...' : 'Guardar restaurante'}
                 </button>
+                </div>
               </form>
-            </aside>
-          </div>
+          </SideDrawer>
         )}
         </section>
       </div>
@@ -368,7 +398,7 @@ function PortalTopBar() {
         <Bell size={17} />
         <Settings size={17} />
         <CircleHelp size={17} />
-        <Sun size={17} />
+        <ThemeToggle />
         <button className="glass-button flex items-center gap-2 rounded-md px-3 py-1.5 text-xs text-white/72" type="button">
           <span className="grid h-5 w-5 place-items-center rounded bg-norix-blue/20 text-norix-blue">G</span>
           Portal global
@@ -399,35 +429,13 @@ function SummaryCard({
   return (
     <article className="glass-card p-4">
       <div className="flex items-center gap-3">
-        <span className={`grid h-10 w-10 place-items-center rounded-lg ${toneClass}`}>{icon}</span>
+        <span className={`grid h-10 w-10 place-items-center rounded-md ${toneClass}`}>{icon}</span>
         <div>
           <p className="text-xs uppercase tracking-[0.16em] text-white/38">{label}</p>
           <p className="mt-1 text-2xl font-semibold text-white">{value}</p>
         </div>
       </div>
     </article>
-  )
-}
-
-function StatusButton({
-  active,
-  children,
-  onClick,
-}: {
-  active: boolean
-  children: ReactNode
-  onClick: () => void
-}) {
-  return (
-    <button
-      className={`rounded-md px-3 text-sm transition ${
-        active ? 'bg-white/12 text-white' : 'text-white/48 hover:text-white'
-      }`}
-      onClick={onClick}
-      type="button"
-    >
-      {children}
-    </button>
   )
 }
 
@@ -446,7 +454,7 @@ function FormField({
     <label className="grid gap-2">
       <span className="text-sm font-medium text-white/72">{label}</span>
       <input
-        className="h-11 rounded-lg border border-white/10 bg-white/[0.045] px-3 text-sm text-white outline-none focus:border-norix-green/60"
+        className="h-11 rounded-md border border-white/10 bg-white/[0.045] px-3 text-sm text-white outline-none focus:border-norix-green/60"
         onChange={(event) => onChange(event.target.value)}
         placeholder={placeholder}
         value={value ?? ''}

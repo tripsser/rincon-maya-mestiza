@@ -19,6 +19,7 @@ import {
   Users,
 } from 'lucide-react'
 import { Link, useLocation } from 'react-router-dom'
+import { ContextRailChip } from './ContextRailChip'
 
 const pinStorageKey = 'norix.tenantSidebarPinned'
 
@@ -74,14 +75,14 @@ export function TenantSidebar() {
 
   return (
     <aside
-      className={`glass-sidebar hidden shrink-0 overflow-hidden transition-[width] duration-300 ease-out xl:flex xl:flex-col ${
-        isExpanded ? 'w-64' : 'w-20'
+      className={`glass-sidebar hidden h-screen shrink-0 overflow-hidden transition-[width] duration-300 ease-out xl:flex xl:flex-col ${
+        isExpanded ? 'w-68' : 'w-[5rem]'
       }`}
       onMouseEnter={() => setIsHovered(true)}
       onMouseLeave={() => setIsHovered(false)}
     >
-      <div className={`relative flex h-20 items-center px-4 ${isExpanded ? 'justify-start' : 'justify-center'}`}>
-        <div className="flex min-w-0 items-center gap-3">
+      <div className={`tenant-sidebar-brand relative flex h-20 items-center px-4 ${isExpanded ? 'justify-start' : 'justify-center'}`}>
+          <div className={`flex min-w-0 items-center ${isExpanded ? 'gap-3' : 'gap-0'}`}>
           <MiniMark />
           <div
             className={`min-w-0 overflow-hidden transition-[max-width,opacity] duration-200 ${
@@ -104,45 +105,39 @@ export function TenantSidebar() {
         </button>
       </div>
 
-      <div className="px-3">
-        <p className={`mb-2 text-[0.66rem] font-semibold uppercase tracking-[0.22em] text-white/34 ${isExpanded ? '' : 'sr-only'}`}>
-          Contexto actual
-        </p>
-        <button className="context-chip mb-4 flex w-full items-center gap-3 rounded-lg p-2.5 text-left" type="button">
-          <span className="grid h-8 w-8 shrink-0 place-items-center rounded-md bg-norix-blue/20 text-norix-blue">
-            <Building2 size={17} />
-          </span>
-          <span
-            className={`min-w-0 flex-1 overflow-hidden transition-[max-width,opacity] duration-200 ${
-              isExpanded ? 'max-w-40 opacity-100 delay-75' : 'max-w-0 opacity-0'
-            }`}
-          >
-            <span className="block truncate text-sm font-medium text-white">Grupo Gourmet</span>
-            <span className="block text-xs text-white/40">Tenant</span>
-          </span>
-        </button>
+      <div className={`tenant-context-block ${isExpanded ? 'px-3' : 'px-2'}`}>
+        <ContextRailChip
+          accent="blue"
+          className="rail-context-chip-resource"
+          expanded={isExpanded}
+          icon={<Building2 size={18} />}
+          kind="Tenant"
+          title="Grupo Gourmet"
+        />
       </div>
 
-      <nav className="flex-1 space-y-3 overflow-y-auto px-3 pb-4">
-        {groups.map((group) => (
-          <SidebarGroup expanded={isExpanded} key={group.title} title={group.title}>
-            {group.items.map((item) => (
-              <SidebarLink
-                active={isActive(location.pathname, item.to)}
-                expanded={isExpanded}
-                icon={<item.icon size={17} />}
-                key={item.label}
-                label={item.label}
-                to={item.to}
-              />
-            ))}
-          </SidebarGroup>
-        ))}
+      <nav className="subtle-scrollbar flex-1 overflow-y-auto pb-4">
+        <div className="space-y-3 px-3">
+          {groups.map((group) => (
+            <SidebarGroup expanded={isExpanded} key={group.title} title={group.title}>
+              {group.items.map((item) => (
+                <SidebarLink
+                  active={isActive(location.pathname, item.to)}
+                  expanded={isExpanded}
+                  icon={<item.icon size={17} />}
+                  key={item.label}
+                  label={item.label}
+                  to={item.to}
+                />
+              ))}
+            </SidebarGroup>
+          ))}
+        </div>
       </nav>
 
       <div className="border-t border-white/10 p-3">
         <SidebarLink expanded={isExpanded} icon={<CircleHelp size={18} />} label="Ayuda" />
-        <div className="mt-4 flex items-center gap-3 rounded-md bg-white/[0.035] p-2.5">
+        <div className={`mt-4 flex items-center rounded-md bg-white/[0.035] p-2.5 ${isExpanded ? 'gap-3' : 'justify-center gap-0'}`}>
           <div className="grid h-9 w-9 shrink-0 place-items-center rounded-full bg-gradient-to-br from-norix-green to-norix-blue text-sm font-bold text-white">
             MS
           </div>
@@ -163,7 +158,7 @@ export function TenantSidebar() {
 
 function MiniMark() {
   return (
-    <div className="relative h-9 w-9 shrink-0 rounded-lg bg-white/[0.04]">
+    <div className="relative h-9 w-9 shrink-0 rounded-md bg-white/[0.04]">
       <span className="absolute left-2 top-1.5 h-6 w-2 rounded bg-gradient-to-b from-norix-green to-norix-blue [transform:skewY(32deg)]" />
       <span className="absolute right-2 top-1.5 h-6 w-2 rounded bg-gradient-to-b from-norix-green to-norix-blue [transform:skewY(-32deg)]" />
     </div>
@@ -202,9 +197,9 @@ function SidebarLink({
   label: string
   to?: string
 }) {
-  const className = `flex w-full items-center gap-3 rounded-md px-3 py-2 text-left text-sm transition ${
+  const className = `flex w-full items-center rounded-md py-2 text-left text-sm transition ${
     active ? 'nav-active text-white' : 'text-white/58 hover:bg-white/[0.04] hover:text-white'
-  }`
+  } ${expanded ? 'gap-3 px-3' : 'justify-center gap-0 px-2'}`
   const content = (
     <>
       <span className={`grid h-5 w-5 shrink-0 place-items-center ${active ? 'text-norix-green' : 'text-white/42'}`}>

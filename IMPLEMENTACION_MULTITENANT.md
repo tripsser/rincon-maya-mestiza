@@ -153,6 +153,441 @@ Implementar el primer slice funcional de autenticacion, sesion distribuida y con
 - En produccion se decidira despues si:
   - el build del frontend se sirve desde ASP.NET Core, o
   - frontend y API se despliegan separados.
+
+## Evaluacion de plantilla Studio Admin
+
+Se reviso la plantilla externa `next-shadcn-admin-dashboard-main` como posible base visual para NORIX.
+
+Hallazgos:
+
+- Stack de la plantilla:
+  - Next.js 16 App Router
+  - React 19
+  - Tailwind CSS 4
+  - shadcn UI / Base UI
+  - TanStack Table
+  - Zustand
+  - React Hook Form
+  - Zod
+  - Biome
+- Licencia MIT, por lo que se puede adaptar codigo o patrones respetando atribucion cuando aplique.
+- La plantilla trae un sistema UI mas completo que el prototipo actual de `Norix.App`: sidebar colapsable, header, buscador, controles de layout, tema claro/oscuro, tablas avanzadas, filtros, paginacion, formularios, drawers/sheets, tabs y pantallas de auth.
+- La arquitectura del template esta basada en colocation por rutas de Next; no coincide directamente con `Norix.App`, que esta en Vite + React Router.
+- La plantilla es un admin kit generico; no representa por si sola la jerarquia de NORIX: inquilino, restaurante/marca y unidad operativa/sucursal.
+
+Decision:
+
+- No migrar NORIX completo a Next.js solo por la plantilla en esta iteracion.
+- No copiar la plantilla completa dentro de `Norix.App`, para evitar mezclar demos, rutas irrelevantes y dependencia de App Router.
+- Adaptar por piezas los patrones que si aportan:
+  - sistema de componentes base tipo shadcn
+  - layout shell mas maduro
+  - tablas con TanStack Table
+  - filtros compactos
+  - drawers/sheets para edicion rapida
+  - toolbar y acciones homogeneas
+  - preferencias de layout/tema
+  - formularios con React Hook Form + Zod
+- Mantener la arquitectura funcional de NORIX:
+  - Vite separado
+  - React Router
+  - Zustand para sesion/contexto UI
+  - TanStack Query para datos remotos
+  - jerarquia visual tipo recurso/contexto inspirada en Azure
+
+Pendiente:
+
+- Definir si se agrega `shadcn` formalmente a `Norix.App` o si se portan solo componentes especificos.
+- Si se copian componentes MIT de la plantilla, agregar nota de atribucion en documentacion/licencia del frontend.
+- Revisar visualmente que los componentes adaptados conserven identidad NORIX: oscuro profundo, vidrio sutil, verde/azul/violeta de marca y layout por contexto.
+
+### Tema visual Norix
+
+- Se separo el tema visual en dos conceptos:
+  - `themeMode`: oscuro/claro.
+  - `themePreset`: preset visual.
+- El tema actual queda guardado como `norix-original`.
+- Se agrego una copia de trabajo llamada `norix-lab`.
+- El boton de tema ahora permite:
+  - alternar entre `Base` y `Lab`;
+  - alternar entre oscuro y claro.
+- Regla de trabajo: los cambios visuales inspirados en Studio Admin se haran sobre `:root[data-theme-preset='norix-lab']` para conservar intacto el tema Norix base.
+- Pendiente de consistencia:
+  - el tema claro existe, pero requiere maduracion visual porque aun se percibe inconsistente;
+  - no se eliminara el cambio claro/oscuro;
+  - los arreglos del tema claro deberan hacerse desde tokens y componentes, no escondiendo el modo claro.
+
+### Maduracion UX pendiente
+
+La UX de NORIX se madurara paso por paso tomando como referencia Studio Admin, pero conservando el acomodo general ya aprobado: portal unico, rail principal, header de recurso estilo Azure, commandbar, tabs y contexto jerarquico.
+
+Checklist priorizado:
+
+- Sistema visual base:
+  - conservar `norix-original` como base estable;
+  - trabajar experimentos en `norix-lab`;
+  - homogeneizar radios, sombras, bordes, hover, focus, inputs, botones y estados;
+  - reducir estilos hechos a mano cuando exista un componente reutilizable.
+- Shell principal:
+  - mantener un solo portal NORIX;
+  - pulir sidebar colapsable/pineable;
+  - definir topbar definitivo con launcher, acciones globales, usuario, tema y notificaciones;
+  - mejorar breadcrumbs como navegacion real de jerarquia.
+- Navegacion por contexto:
+  - tenant con menu administrativo global;
+  - restaurante/marca con menu de recurso marca;
+  - unidad operativa/sucursal con menu operativo;
+  - el cambio de recurso debe cambiar el menu sin sentirse como otra aplicacion;
+  - resolver vista para usuarios con scope parcial: solo restaurante o solo sucursal.
+- Colecciones:
+  - tablas limpias tipo Azure/shadcn;
+  - busqueda, filtros, ordenamiento y paginacion;
+  - acciones homogeneas: agregar, editar, desactivar, exportar, actualizar;
+  - estados vacios, loading, 401, 403 y 500;
+  - seleccion multiple y acciones masivas cuando aplique.
+- Vista de recurso:
+  - header de recurso reusable con breadcrumb, titulo, tipo, id, commandbar y tabs;
+  - vista `Informacion general` estilo Azure;
+  - edicion con lapiz/panel lateral;
+  - tabs solo si aportan trabajo real al recurso.
+- Formularios:
+  - validacion por campo;
+  - errores visuales consistentes;
+  - confirmaciones de guardado;
+  - dirty state para cambios sin guardar;
+  - crear/editar con mismo lenguaje visual.
+- Autorizacion visible:
+  - ocultar o deshabilitar acciones segun permisos;
+  - mensajes claros por falta de permiso;
+  - diferenciar bien alcance tenant, restaurante y sucursal.
+- Feedback de sistema:
+  - toasts;
+  - skeletons;
+  - spinners pequenos;
+  - sesion expirada;
+  - reintentos ante fallos de API.
+- Responsive:
+  - sidebar mobile;
+  - tablas en pantallas chicas;
+  - drawers adaptados a movil;
+  - layout estable en laptop chica.
+- Componentizacion objetivo:
+  - `AppShell`;
+  - `ResourceHeader`;
+  - `CommandBar`;
+  - `DataTable`;
+  - `SideDrawer`;
+  - `StatusBadge`;
+  - `ContextBreadcrumb`;
+  - `ContextSwitcher`;
+  - `EmptyState`.
+
+### Arquitectura frontend por features
+
+Se redirigira `Norix.App` a una arquitectura feature-first. La unidad principal de organizacion sera el modulo funcional, no el tipo tecnico de archivo. Esto evita que el proyecto termine con carpetas enormes de `components`, `services` o `pages` desconectadas del dominio.
+
+Estructura objetivo:
+
+```text
+src/
+  app/
+    App.tsx
+    AppProviders.tsx
+    router/
+      AppRoutes.tsx
+    query/
+      queryClient.ts
+
+  shared/
+    api/
+      apiClient.ts
+    lib/
+      theme.ts
+    ui/
+      CommandBar.tsx
+      CollectionToolbar.tsx
+      DataTable.tsx
+      NorixMark.tsx
+      ResourceHeader.tsx
+      SideDrawer.tsx
+      StatusBadge.tsx
+      TenantSidebar.tsx
+      ThemeToggle.tsx
+
+  features/
+    auth/
+      api/
+        authApi.ts
+      model/
+        authStore.ts
+      pages/
+        LoginPage.tsx
+    context/
+      pages/
+        ContextPage.tsx
+    tenant/
+      restaurants/
+        api/
+          restaurantsApi.ts
+        pages/
+          RestaurantsPage.tsx
+          RestaurantContextPage.tsx
+        components/
+```
+
+Reglas:
+
+- `app` solo arranca la aplicacion, providers globales y rutas.
+- `features` agrupa cada modulo de negocio por dominio y es el lugar principal donde vive el codigo.
+- `shared` no conoce reglas de negocio; solo UI, helpers, API client y utilidades reutilizables por varios features.
+- Las paginas importan componentes compartidos desde `shared/ui`.
+- Las llamadas HTTP especificas viven dentro del feature correspondiente.
+- El estado propio de un feature vive dentro del feature, por ejemplo `features/auth/model/authStore.ts`.
+- Los componentes que solo usa un feature viven en `features/<feature>/components`.
+- Un componente solo sube a `shared/ui` cuando ya se usa o claramente se usara en varios features.
+- Se permitira refactor incremental: primero mover estructura y rutas, luego separar componentes internos por feature.
+- Se evitaran componentes gigantes; cuando una pagina supere una responsabilidad clara, se extraeran componentes locales del feature.
+- Avance aplicado:
+  - se creo `src/app/App.tsx`;
+  - se creo `src/app/AppProviders.tsx`;
+  - se creo `src/app/router/AppRoutes.tsx`;
+  - se creo `src/app/query/queryClient.ts`;
+  - `main.tsx` quedo como bootstrap minimo;
+  - `auth` se separo en `api`, `model` y `pages`;
+  - `context` se separo en `pages`;
+  - `tenant/restaurants` se separo en `api` y `pages`;
+  - componentes reutilizables se movieron a `shared/ui`;
+  - `apiClient` se movio a `shared/api`;
+  - `theme` se movio a `shared/lib`;
+  - validacion: `npm.cmd run build` exitoso.
+- Avance inicial de maduracion:
+  - se creo `Norix.App/src/components/ResourceHeader.tsx`;
+  - `ResourceHeader` encapsula breadcrumb, titulo, badge, id, commandbar y tabs;
+  - se aplico en `/tenant/restaurantes`;
+  - se aplico en `/tenant/restaurantes/:id`;
+  - se conservaron el acomodo y jerarquia visual aprobados;
+  - en `norix-lab` se ajustaron tokens y estilos del header/commandbar para acercarlos a Studio Admin sin afectar `norix-original`;
+  - validacion: `npm.cmd run build` exitoso.
+- Avance de colecciones CRUD:
+  - se creo `Norix.App/src/components/CollectionToolbar.tsx`;
+  - se creo `Norix.App/src/components/StatusBadge.tsx`;
+  - se creo `Norix.App/src/components/SideDrawer.tsx`;
+  - `/tenant/restaurantes` usa toolbar reusable para busqueda y filtros segmentados;
+  - `/tenant/restaurantes` usa badges de estado reutilizables;
+  - el panel lateral de crear/editar restaurantes usa `SideDrawer`;
+  - se agregaron ajustes visuales en `norix-lab` para toolbar, tabla y drawer inspirados en Studio Admin;
+  - validacion: `npm.cmd run build` exitoso.
+- Avance de tablas:
+  - se creo `Norix.App/src/components/DataTable.tsx`;
+  - `DataTable` define shell, header, body, row, cell, message row y footer visual;
+  - `/tenant/restaurantes` dejo de usar tabla HTML inline y ahora usa `DataTable`;
+  - se ajustaron acciones para sentirse mas cercanas al panel: boton contextual compacto + icon buttons;
+  - `norix-lab` agrega estilos especificos para tabla: header suave, filas limpias, hover discreto, footer y paginacion visual;
+  - se mantiene preparada la ruta para incorporar TanStack Table despues, cuando se requiera paginacion/ordenamiento real;
+  - validacion: `npm.cmd run build` exitoso.
+- Correccion de direccion visual de tablas:
+  - la referencia real aprobada es el patron tipo tasks del panel: toolbar dentro del contenedor, filtros compactos, columna de seleccion, filas densas, acciones discretas con tres puntos y footer con rows/page + paginacion;
+  - `DataTableShell` ahora acepta `toolbar` y `footer`;
+  - se agregaron `DataTableFilterButton` y `DataTableCheckbox`;
+  - `/tenant/restaurantes` ahora muestra filtros dentro de la tabla, columna de seleccion, accion de mas opciones y footer estilo panel;
+  - el filtro `Status` se mantiene funcional ciclando `Todos`, `Activos` e `Inactivos`;
+  - validacion: `npm.cmd run build` exitoso.
+- Avance de animaciones:
+  - se agrego un sistema CSS de animaciones NORIX con entradas `fade-up`, `slide-left`, `slide-right`, overlay y transiciones suaves;
+  - el portal, headers de recurso, paneles, cards, tabla, filas y chips tienen entrada/transicion sutil;
+  - `SideDrawer` ahora usa `side-drawer-backdrop` y `side-drawer` para animar overlay y entrada lateral;
+  - el rail anidado de restaurante/marca usa `resource-rail` para entrar desde la izquierda;
+  - se agrego soporte para `prefers-reduced-motion`;
+  - la intencion visual es enterprise/NORIX: movimiento corto, suave y acorde a la paleta, sin exagerar;
+  - validacion: `npm.cmd run build` exitoso.
+- Correccion de animaciones:
+  - se retiraron animaciones globales del portal, headers, paneles, cards y filas porque generaban sensacion de parpadeo al cambiar rutas;
+  - el nivel tenant debe sentirse estable cuando no cambia el contexto;
+  - el movimiento queda concentrado en elementos que realmente aparecen o se abren: drawer y rail anidado;
+  - el rail anidado de restaurante/marca ahora usa un reveal lateral con `clip-path`, sombra lateral y contenido escalonado;
+  - objetivo: navegacion fluida tipo panel anidado, no reanimacion completa de pantalla.
+- Correccion adicional del rail anidado:
+  - se detecto que el cambio seguia sintiendose brusco porque el rail empujaba el layout de golpe;
+  - el rail de restaurante/marca ahora anima su ancho/flex-basis desde `0` hasta `14rem`;
+  - el contenido interno entra despues con una opacidad corta y desplazamiento minimo;
+  - se quito el doble slide interno de los hijos para evitar movimiento exagerado;
+  - objetivo: que se perciba como panel anidado que se abre dentro del contexto tenant, no como parpadeo de pantalla.
+- Avance de tercer nivel Unidad Operativa / Sucursal:
+  - se creo un componente reusable `ResourceRail` para rails anidados;
+  - cada rail puede estar fijo o contraido y se despliega al pasar el mouse;
+  - cuando se abre un rail hijo, el rail padre puede forzarse a modo compacto para ahorrar espacio, pero sigue pudiendo expandirse con hover;
+  - se agrego la ruta `/tenant/restaurantes/:id/sucursales/:branchId`;
+  - desde la tabla de sucursales del restaurante/marca, la accion `Abrir` entra al contexto de sucursal;
+  - la pantalla de sucursal mantiene el portal NORIX, el sidebar tenant, el rail de restaurante/marca compacto y un nuevo rail operativo de sucursal;
+  - el menu tentativo de sucursal incluye: informacion general, mesas, comandas, cocina, caja, pagos, empleados, impresoras, activos, roles operativos, actividad y configuracion;
+  - de momento la sucursal usa la coleccion ya cargada desde `/api/tenant/restaurantes/{id}/sucursales`; despues se refinara con endpoint propio de unidad operativa si hace falta mas detalle.
+- Correccion de scroll del portal:
+  - se detecto que los menus se cortaban al desplazarse porque el documento completo hacia scroll mientras los rails usaban `overflow-hidden`;
+  - el shell principal ahora usa altura de viewport (`h-screen`) y oculta overflow global;
+  - el contenido principal de cada vista hace scroll interno con `overflow-y-auto`;
+  - `TenantSidebar` mantiene altura completa de viewport;
+  - `ResourceRail` ahora usa altura completa, estructura vertical y `nav` con scroll interno;
+  - objetivo: que los menus tenant, restaurante y sucursal permanezcan completos y utilizables aunque el contenido de la vista sea largo.
+- Ajuste visual de scrollbars:
+  - se redujo el ancho de scrollbars globales para que no ensucien el glassmorphism;
+  - se agrego clase `subtle-scrollbar` para rails, sidebar y contenido principal;
+  - en los menus anidados el thumb queda casi invisible por defecto y aparece de forma sutil al hover;
+  - se mantiene accesibilidad basica de scroll en navegadores con soporte de `scrollbar-width`.
+- Correccion de consistencia de scrolls en rails:
+  - se normalizo el comportamiento visual entre `TenantSidebar` y `ResourceRail`;
+  - el contenedor que scrollea ya no carga padding lateral diferente; el padding vive en un wrapper interno;
+  - los scrollbars internos quedan invisibles en reposo;
+  - al hover se muestran como una linea de 2px, sin thumb ancho ni track visible.
+- Experimento `norix-lab` de timeline contextual:
+  - se creo `ContextTimelineBar` como barra superior de jerarquia visible solo en el preset `norix-lab`;
+  - la barra vive debajo del topbar y encima de los rails/contenido;
+  - reemplaza visualmente el breadcrumb pequeno por una lectura mas robusta tipo timeline;
+  - cada nivel usa color de marca:
+    - tenant: azul NORIX;
+    - restaurante/marca: verde NORIX;
+    - sucursal/unidad operativa: violeta NORIX;
+  - los conectores ya no son solo `>`; se representan como lineas con punta, degradando del color del nivel padre al color del nivel hijo;
+  - el ultimo segmento ocupa el resto del navbar para que la jerarquia se sienta como estructura de trabajo y no como breadcrumb corto;
+  - en sucursal, el segmento de restaurante puede mostrarse compacto para coincidir con el rail padre contraido.
+- Correccion del timeline contextual `norix-lab`:
+  - el primer intento se percibio demasiado pesado y como pieza agregada;
+  - el timeline ahora es una barra fija de ancho completo del portal, no solo del area de contenido;
+  - queda arriba del menu tenant, rail restaurante, rail sucursal y contenido;
+  - se redujo el lenguaje visual a lineas finas, puntos discretos y texto sobrio;
+  - se oculto el breadcrumb pequeno dentro de `ResourceHeader` en `norix-lab` para evitar duplicidad de contexto;
+  - el preset base `norix-original` conserva el breadcrumb tradicional.
+- Correccion de solapamiento del timeline `norix-lab`:
+  - el menu tenant seguia iniciando desde el alto completo del viewport y se encimaba con la barra contextual;
+  - en vistas con `ContextTimelineBar`, el `TenantSidebar` baja por debajo de `topbar + timeline`;
+  - se ajusta su altura a `calc(100vh - 6.25rem)`;
+  - el workspace tambien baja bajo la barra contextual para mantener alineados los tres niveles.
+- Sincronizacion del timeline con rails `norix-lab`:
+  - `TenantSidebar` y `ResourceRail` ahora exponen `data-expanded` y `data-resource-level`;
+  - el timeline usa esos estados para ajustar el ancho de sus segmentos;
+  - si el menu tenant se expande, el segmento tenant y su conector tambien se expanden;
+  - si el rail restaurante o sucursal se expanden, su segmento y la linea de union se ajustan al mismo ancho;
+  - el texto de segmentos compactos permanece oculto hasta que el rail correspondiente se despliega;
+  - se corrigio el segmento intermedio para que el link/chip use todo el ancho disponible y no quede cortado.
+- Correccion de topbar `norix-lab`:
+  - el topbar se acortaba al expandir el sidebar porque vivia dentro del area de contenido;
+  - en vistas con timeline, el topbar ahora es una barra global fija de ancho completo;
+  - el workspace baja `6.25rem` para respetar `topbar + timeline`;
+  - el comportamiento del preset base queda sin cambios.
+- Marca en topbar `norix-lab`:
+  - se agrego `TopbarBrand` para mostrar logo y nombre NORIX en la barra superior;
+  - en vistas con timeline, la marca se muestra en el topbar y se oculta la cabecera de marca del sidebar;
+  - el sidebar queda dedicado a navegacion/contexto, no a identidad de marca;
+  - se ajusto el ancho del buscador para que no compita con el bloque NORIX;
+  - fuera del experimento con timeline, el comportamiento visual se mantiene como antes.
+- Alineacion visual de tres rails `norix-lab`:
+  - el sidebar tenant ahora usa las mismas medidas que los rails de restaurante y sucursal en vistas con timeline;
+  - ancho compacto: `4.25rem`;
+  - ancho expandido: `14rem`;
+  - se agrego un control superior de navegacion/pin para tenant, equivalente al de `ResourceRail`;
+  - se oculta el bloque redundante de contexto del tenant porque el timeline ya muestra la jerarquia;
+  - se ajustaron paddings, ritmo de grupos y footer para que los tres rails se perciban como parte del mismo sistema.
+- Correccion de centrado de rails compactos:
+  - se elimino el `gap` residual entre icono y texto oculto en estado compacto;
+  - los iconos de tenant, restaurante y sucursal quedan centrados realmente en el ancho de `4.25rem`;
+  - el footer del tenant tambien centra su avatar en modo compacto;
+  - los paddings compactos de tenant y `ResourceRail` quedan homologados.
+- Correccion del panel de contexto tenant:
+  - se restauro el panel/chip que indica el contexto tenant dentro del sidebar;
+  - el timeline no reemplaza ese panel, solo muestra jerarquia global;
+  - el chip tenant se mantiene alineado con los chips de restaurante y sucursal;
+  - el control de navegacion/pin queda debajo del chip para conservar consistencia visual entre rails.
+- Alineacion de altura de chips de contexto `norix-lab`:
+  - los chips superiores de tenant, restaurante y sucursal ahora comparten altura minima;
+  - en modo expandido usan `4.25rem`;
+  - en modo compacto usan `3.25rem`;
+  - se oculto el label externo `Contexto actual` en Lab para que el chip tenant empiece a la misma altura que los rails anidados;
+  - se homologaron padding e icon size del chip tenant con `ResourceRail`.
+- Correccion exacta de chips compactos `norix-lab`:
+  - los tres chips superiores ya no usan solo `min-height`;
+- en estado compacto usan altura fija moderada de `5.75rem`;
+- el icono interno usa caja fija de `3.75rem`;
+- tenant, restaurante y sucursal quedan con la misma tarjeta superior, mismo alto y mismo centro visual;
+- se descarto la tarjeta vertical alta porque generaba hueco visual y se percibia ridicula.
+- Restauracion visual de chips compactos:
+  - se eliminaron hacks de posicionamiento absoluto que deterioraban el look original;
+  - los chips compactos vuelven a ser tarjetas pequenas con tile interno centrado;
+  - el wrapper interno de `ResourceRail` se alinea con grid para no desplazar el icono.
+- Tonalidad por nivel `norix-lab`:
+  - tenant mantiene tonada azul NORIX;
+  - restaurante/marca usa tonada verde NORIX;
+  - sucursal/unidad operativa usa tonada violeta NORIX;
+  - el rail de sucursal ahora usa `accent="violet"`;
+  - el estado activo dentro del rail de sucursal tambien cambia a violeta para mantener consistencia con el nivel.
+- Consistencia del sidebar tenant `norix-lab`:
+  - se detecto que el sidebar tenant regresaba al estilo original cuando no habia rails de restaurante/sucursal;
+  - `/contexto` ahora tambien monta `ContextTimelineBar` con el nivel tenant;
+  - esto activa las mismas reglas visuales de Lab para el sidebar tenant aunque sea el unico rail visible;
+  - el sidebar tenant ya no cambia de personalidad entre la vista tenant pura y las vistas con rails anidados.
+- Limpieza del experimento `norix-lab`:
+  - se retiro `ContextTimelineBar` de las vistas tenant, restaurante y sucursal;
+  - se elimino `TopbarBrand` y la reubicacion de marca hacia el topbar;
+  - se quitaron los atributos/props usados solo para sincronizar timeline y rails (`data-resource-level`, `resourceLevel`, `context-workspace`);
+  - se elimino el control duplicado `tenant-sidebar-control`;
+  - se limpiaron los overrides CSS de `norix-lab` para que el preset vuelva a heredar el tema base;
+  - se conservan los rails anidados funcionales y el acento violeta de sucursal, porque forman parte de la navegacion por contexto aprobada.
+- Correccion de chips de contexto en rails:
+  - se detecto que el chip tenant y los chips de `ResourceRail` no eran el mismo componente ni compartian medidas;
+  - se creo `ContextRailChip` en `shared/ui`;
+  - `TenantSidebar` y `ResourceRail` ahora renderizan el mismo chip para contexto actual;
+  - se homologaron altura, padding, tile de icono, copy y transiciones mediante clases `rail-context-chip`;
+  - el sidebar tenant usa las mismas medidas compacta/expandida que los rails anidados para evitar desalineacion visual.
+- Correccion fina de alineacion de chips:
+  - el chip tenant seguia viendose distinto porque en compacto su wrapper usaba `px-3` y el `ResourceRail` usaba `px-2`;
+  - se homologaron los paddings compactos para que ambos chips tengan el mismo ancho real;
+  - se retiro el label visible `Contexto actual` sobre el chip tenant porque empujaba solo ese nivel;
+  - se agrego `resource-rail-top-spacer` para que los chips de restaurante/sucursal arranquen a la misma altura vertical que el chip tenant bajo la marca.
+- Ajuste visual de chips anidados:
+  - se mantuvo fijo el chip tenant;
+  - se redujo `resource-rail-top-spacer` de `4.25rem` a `1.2rem` para subir los chips de restaurante/sucursal.
+- Restauracion de efecto visual en chips de rails:
+  - `ContextRailChip` ahora acepta `className` y expone `data-accent`;
+  - `ResourceRail` aplica `rail-context-chip-resource` a los chips anidados;
+  - se agrego glow radial suave, borde interno y hover con color del nivel (`green`, `violet`, `blue`);
+  - despues se aplico el mismo efecto al chip tenant con acento azul, sin modificar medidas ni posicion.
+- Switcher desde chips de rails:
+  - los chips de `ResourceRail` ahora pueden abrir un selector de recurso debajo del chip;
+  - el chip tenant no participa en este comportamiento;
+  - el rail restaurante/marca carga restaurantes activos y permite cambiar de marca desde el chip;
+  - el rail sucursal/unidad operativa lista las sucursales cargadas del restaurante y permite cambiar de unidad operativa;
+  - el selector conserva el color del nivel mediante `data-accent`.
+- Correccion del switcher en nivel restaurante:
+  - el chip de restaurante/marca ahora siempre tiene selector, aun antes de terminar de cargar la lista de marcas;
+  - si la query aun no trae datos, se muestra como minimo el restaurante/marca actual;
+  - se agrego `switcherLabel` para diferenciar claramente `Cambiar restaurante / marca` y `Cambiar unidad operativa`.
+- Ajuste de interaccion del switcher:
+  - el indicador del chip cambia de `+/-` a chevron arriba/abajo;
+  - el selector ya no empuja el menu lateral;
+  - la lista ahora flota sobre el nav del rail como popover con blur, borde y sombra;
+  - la apertura usa desplazamiento vertical sutil para sentirse como capa superpuesta.
+- Jerarquia visual del rail tenant:
+  - el sidebar tenant queda ligeramente mas robusto que los rails anidados;
+  - ancho compacto tenant: `5rem`;
+  - ancho expandido tenant: `17rem`;
+  - los rails restaurante/sucursal conservan sus medidas compactas para sentirse subordinados al tenant.
+- Experimento `norix-lab` glassmorphism:
+  - se reactivo el preset `norix-lab` como modo de prueba visual;
+  - el tema base `norix-original` queda sin tocar;
+  - `norix-lab` aumenta transparencias, blur, saturacion, bordes luminosos, brillos internos y sombras;
+  - se aplico vidrio fuerte a sidebar, topbar, headers, paneles, cards, botones, tablas, chips y switcher flotante;
+  - objetivo: probar una direccion mas glassmorphism sin comprometer el tema estable.
+- Limpieza de basura frontend:
+  - se elimino `CollectionToolbar.tsx` porque quedo sin uso despues de migrar la coleccion a `DataTable`;
+  - se quitaron estilos muertos: `glass-toolbar`, `breadcrumb-glass`, `scope-glass`;
+  - se quitaron clases/keyframes sin consumidor: `animate-norix-*`, `norix-fade-up`, `norix-slide-right`, `norix-border-pulse`;
+  - se verifico que no queden referencias a `ContextTimelineBar`, `TopbarBrand`, `context-timeline`, `tenant-sidebar-control` ni `resourceLevel`;
+  - se verifico que no exista `dist`, `.build-check` ni `.data-protection-keys` dentro de `Norix.App`;
+  - validacion: `npm.cmd run build` y `npm.cmd run lint` exitosos.
+- Restauracion visual de login:
+  - el login vuelve a usar su composicion visual propia con `brand-grid`, `brand-ribbon` y glows;
+  - se retiro el uso de `norix-portal` en la pantalla de login para no mezclarla con el shell interno;
+  - se eliminaron las clases temporales `login-card`, `login-brand-pill` y `login-session-panel`;
+  - el portal autenticado conserva su fondo y glass actuales sin afectar la pantalla de acceso.
+
 - Se creo el proyecto frontend `Norix.App` con Vite oficial y template React + TypeScript.
 - Se instalaron las dependencias acordadas:
   - TanStack Query;
@@ -704,6 +1139,110 @@ Confirmacion corta: modal
 - Validacion despues de quitar metricas superiores:
   - `npm.cmd run build` exitoso.
   - `npm.cmd run lint` exitoso.
+- Tema claro NORIX:
+  - se agrego soporte inicial de tema claro sin duplicar pantallas ni componentes;
+  - el tema se guarda en `localStorage` con la llave `norix.theme`;
+  - el tema se aplica en `document.documentElement.dataset.theme`;
+  - se agrego `ThemeToggle` en el topbar global;
+  - el icono cambia entre sol/luna y permite alternar tema oscuro/claro;
+  - se agregaron overrides globales para superficies, sidebar, topbar, headers, botones, tablas, texto, bordes y fondos;
+  - el tema claro usa estilo corporativo tipo Azure claro: fondo gris azulado, paneles blancos, texto grafito y acentos NORIX;
+  - se separo la logica de tema en `src/lib/theme.ts` para evitar warnings de Fast Refresh.
+- Validacion despues del tema claro:
+  - `npm.cmd run build` exitoso.
+  - `npm.cmd run lint` exitoso.
+- Ajuste visual del tema claro:
+  - el primer tema claro se percibia demasiado plano;
+  - se aumento el efecto glass con superficies mas translucidas, blur mas fuerte, saturacion, brillos internos y sombras suaves;
+  - se agregaron tintes sutiles azul/verde/violeta en paneles, sidebar, topbar, headers, botones y chips;
+  - el tema claro debe mantener lectura corporativa clara, pero conservar la identidad glassmorphism de NORIX.
+- Validacion despues de reforzar glass en tema claro:
+  - `npm.cmd run build` exitoso.
+  - `npm.cmd run lint` exitoso.
+- Ajuste visual del tema oscuro:
+  - se redujo el brillo blanco diagonal de paneles y cards porque se percibia como plantilla/neon;
+  - se bajo la intensidad del fondo con menos glow y grid mas sutil;
+  - se recupero el glassmorphism oscuro con mayor translucidez, blur y saturacion;
+  - se reemplazo el brillo blanco plano por reflejos suaves, tintes NORIX y bordes luminosos discretos;
+  - el sidebar y topbar quedaron mas corporativos, con sombras finas y menos translucidez excesiva;
+  - los acentos activos se inclinan mas a azul NORIX con verde como apoyo;
+  - el objetivo del dark queda: glass premium enterprise, no dashboard neon ni paneles solidos.
+- Validacion despues de ajustar tema oscuro:
+  - `npm.cmd run build` exitoso.
+  - `npm.cmd run lint` exitoso.
+- Convencion de bordes:
+  - NORIX usara esquinas tecnicas y moderadas, no componentes excesivamente redondeados;
+  - controles, inputs, tablas, tarjetas y chips de navegacion bajan a radios de 6-8px;
+  - los radios grandes se reservan para elementos naturalmente circulares como avatares, iniciales y badges/status pequeños;
+  - se redujeron `rounded-lg`/`rounded-2xl` en shell, CRUDs y login para acercar el producto a un lenguaje enterprise tipo Azure.
+- Validacion despues de ajustar bordes:
+  - `npm.cmd run build` exitoso.
+  - `npm.cmd run lint` exitoso.
+- Centralizacion de paleta NORIX:
+  - se confirmo que la paleta oficial usada por el frontend es:
+    - Azul profundo: `#080f19`;
+    - Gris grafito: `#141a24`;
+    - Azul NORIX: `#2563ff`;
+    - Verde NORIX: `#22d3a6`;
+    - Violeta: `#7c4dff`;
+    - Gris claro: `#e2e6f0`.
+  - se agregaron canales RGB oficiales para poder crear transparencias sin inventar colores:
+    - `--norix-rgb-deep`;
+    - `--norix-rgb-graphite`;
+    - `--norix-rgb-blue`;
+    - `--norix-rgb-green`;
+    - `--norix-rgb-violet`;
+    - `--norix-rgb-light`.
+  - se crearon tokens semanticos de material:
+    - `--surface-page`;
+    - `--surface-glass`;
+    - `--surface-sidebar`;
+    - `--surface-topbar`;
+    - `--surface-header`;
+    - `--surface-button`;
+    - `--surface-button-hover`;
+    - `--surface-panel-sheen`;
+    - `--surface-context`;
+    - `--surface-breadcrumb`;
+    - `--surface-map`;
+    - `--line-soft`;
+    - `--line-strong`;
+    - `--shadow-glass`;
+    - `--text-main`;
+    - `--text-muted`.
+  - los temas oscuro y claro redefinen esos tokens, pero no introducen una paleta nueva;
+  - se elimino el color manual del login y se reemplazo por `bg-norix-graphite/88`;
+  - se reemplazaron sombras y fondos arbitrarios por variables derivadas de la paleta;
+  - regla: cualquier color visual fuerte debe salir de la paleta NORIX; los matices se logran con alfa/gradientes usando los canales RGB oficiales.
+- Validacion despues de centralizar paleta:
+  - `npm.cmd run build` exitoso.
+  - `npm.cmd run lint` exitoso.
+  - barrido de colores: solo quedan hex oficiales de la paleta en `index.css`.
+- Ajuste de paneles glass:
+  - se elimino el gradiente blanco/sheen diagonal de `glass-panel` y `glass-card`;
+  - el glass debe apoyarse en translucidez, blur, borde y sombra, no en una mancha blanca encima;
+  - `--surface-panel-sheen` queda reducido a una sombra vertical muy sutil para profundidad.
+- Validacion despues de quitar sheen blanco:
+  - `npm.cmd run build` exitoso.
+  - `npm.cmd run lint` exitoso.
+- Fondo para resaltar glass:
+  - se agrego estructura visual sutil detras de los paneles para que el glass tenga profundidad;
+  - el fondo usa bandas lineales finas, grid discreto y tintes suaves derivados de la paleta NORIX;
+  - se evitan orbs/manchas decorativas pesadas;
+  - la intencion es que el vidrio se lea por transparencia y blur contra un fondo con textura controlada.
+- Validacion despues de agregar fondo:
+  - `npm.cmd run lint` exitoso.
+  - `npm.cmd run build` exitoso al ejecutarlo solo; una ejecucion paralela inicial de Vite fallo por emision de `index.html` con ruta absoluta y no se reprodujo.
+- Preview externo recibido:
+  - se reviso el archivo `norix-console.tsx` como prototipo enviado por un colega;
+  - se monto temporalmente como preview para evaluarlo;
+  - despues de la revision de limpieza se retiro del proyecto para no dejar codigo prototipo con `// @ts-nocheck`;
+  - no forma parte del producto real de NORIX.
+- Limpieza de proyecto:
+  - se elimino `Norix.App/src/features/prototypes/NorixConsolePreview.tsx`;
+  - se elimino la ruta temporal `/preview/norix-console`;
+  - se elimino `NORIX_LOGIN_ESTILOS_RESPALDO.css` porque era un respaldo viejo de estilos;
+  - se conservaron `node_modules`, `bin` y `obj` solo como artefactos locales ignorados por git.
 
 - Avance implementado:
   - el sidebar de `/contexto` ya fue alineado con este menu tenant;
@@ -863,6 +1402,55 @@ Elementos que quedan como futuros o no prioritarios:
 - Etiquetas.
 - Portal raiz/superadmin para administrar multiples inquilinos.
 
+## Arquitectura backend acordada
+
+La API se organizara con una arquitectura por capas y modulos, manteniendo el codigo cerca del dominio sin volverlo innecesariamente abstracto en esta etapa.
+
+Capas principales:
+
+```text
+Domain
+  Entidades, value objects, enums y reglas puras del dominio.
+
+Application
+  Casos de uso, DTOs, validaciones, contratos e interfaces que necesita la aplicacion.
+
+Infrastructure
+  EF Core, PostgreSQL, Identity, Redis, JWT, implementaciones de servicios externos y persistencia.
+
+Api
+  Endpoints, middlewares, configuracion DI, autenticacion, autorizacion y respuestas HTTP.
+```
+
+Modulos principales previstos:
+
+```text
+Tenancy
+Identity
+Restaurants
+OperationalUnits
+Catalog
+Printing
+TechnologyAssets
+```
+
+Reglas de implementacion:
+
+- Los endpoints no contienen logica de negocio; reciben request, validan entrada basica, llaman un caso de uso/servicio de aplicacion y devuelven response.
+- Los casos de uso validan contexto, permisos y reglas del dominio antes de persistir cambios.
+- La autorizacion se mantiene separada por nivel: inquilino, restaurante/marca y unidad operativa/sucursal.
+- El frontend manda el contexto activo con headers; el backend no confia en el frontend y siempre valida contra la sesion Redis.
+- El JWT se mantiene minimo (`sub`, `sid`, `exp`); los permisos y alcances viven en Redis para poder recalcularlos sin inflar claims.
+- PostgreSQL RLS queda preparado porque el contexto activo esta centralizado en `ICurrentUser` e `ICurrentContext`.
+
+Decision sobre repositorios y unidad de trabajo:
+
+- No se agregara un patron Unit of Work propio de forma general, porque `DbContext` ya funciona como unidad de trabajo en EF Core: rastrea cambios y confirma todo junto con `SaveChangesAsync`.
+- No se crearan repositorios genericos tipo `IRepository<T>` para todas las entidades. En este proyecto agregarian ceremonia sin dar mucho valor, esconderian capacidades utiles de EF Core y complicarian queries reales.
+- Si un modulo necesita consultas complejas, reutilizables o muy expresivas, se crearan repositorios o query services especificos, por ejemplo `IRestaurantReadService`, `ITenantAccessRepository` o `IOperationalAssignmentRepository`.
+- Para escritura simple de CRUDs se podra usar `AppDbContext` directamente desde servicios/casos de uso de aplicacion, cuidando que la logica de negocio no quede en endpoints.
+- Si despues aparecen transacciones que crucen varios agregados o integraciones externas, se evaluara agregar un `IUnitOfWork` delgado que envuelva `SaveChangesAsync`, pero no como abstraccion inicial obligatoria.
+
 ## Estructura creada
 
 ```text
@@ -1002,9 +1590,29 @@ X-Restaurant-Id: 99999999-9999-9999-9999-999999999999
 - Despues de cambiar la forma de la sesion Redis, lo mas limpio es iniciar sesion de nuevo para crear un `sid` fresco con `restaurantScopes`; si se usa una cookie vieja, el backend intenta recalcular la sesion al leerla.
 - RLS queda preparado conceptualmente porque el contexto activo esta centralizado en `ICurrentUser` e `ICurrentContext`; el siguiente paso tecnico seria agregar un interceptor/transaccion que ejecute `set_config` en PostgreSQL antes de queries protegidas.
 
+## Despliegue Coolify
+
+- Se decidio preparar el despliegue con contenedores separados por responsabilidad:
+  - `web`: React/Vite compilado y servido por Nginx.
+  - `api`: ASP.NET Core 9 como Web API pura.
+  - `postgres`: PostgreSQL 16 con volumen persistente.
+  - `redis`: Redis 7 con AOF y password.
+- El dominio publico debe apuntar al servicio `web` en puerto interno `80`.
+- El frontend consume la API por ruta relativa `/api`; Nginx reenvia esas peticiones al servicio interno `api:8080`.
+- Esta decision evita CORS en la primera etapa y mantiene la cookie `httpOnly`, `Secure`, `SameSite=Strict` funcionando bajo el mismo origen publico.
+- PostgreSQL y Redis quedan privados dentro de la red del compose; no se recomienda exponerlos publicamente.
+- Se agregaron archivos de despliegue:
+  - `docker-compose.coolify.yml`
+  - `RestauranteSaaS.Api/Dockerfile`
+  - `Norix.App/Dockerfile`
+  - `Norix.App/nginx.conf`
+  - `DEPLOY_COOLIFY.md`
+- Pendiente para produccion real: job de migraciones, backups automaticos de PostgreSQL y seed controlado sin passwords demo.
+
 ## Pendientes
 
 - Actualizar `ConnectionStrings:Postgres` con el password/usuario real de la BD local.
+- Preparar job de migraciones para despliegue en Coolify.
 - Conectar el header `X-Tenant-Id` del frontend al contexto activo en Zustand; actualmente `/tenant/restaurantes` usa el tenant del seed para avanzar el slice.
 - Alinear seed/permisos finales para validar `restaurantes.ver`, `restaurantes.crear`, `restaurantes.editar` y `restaurantes.desactivar` desde backend.
 - Ejecutar:
