@@ -587,6 +587,15 @@ Reglas:
   - se retiro el uso de `norix-portal` en la pantalla de login para no mezclarla con el shell interno;
   - se eliminaron las clases temporales `login-card`, `login-brand-pill` y `login-session-panel`;
   - el portal autenticado conserva su fondo y glass actuales sin afectar la pantalla de acceso.
+- Navegacion responsive:
+  - se detecto que en dispositivos medianos y chicos el sidebar/rail lateral queda fuera del alcance ergonomico del usuario;
+  - se agrego `MobileBottomNav` para pantallas menores a `xl`;
+  - el sidebar tenant y los rails anidados se conservan en desktop;
+  - en tablet/movil la navegacion principal se acopla abajo como dock glass;
+  - el dock funciona como pestana expansible: una fila compacta permanente y un sheet corto que se despliega hacia arriba para mostrar el menu completo;
+  - se evita usar varias filas permanentes o scroll horizontal como navegacion primaria;
+  - las vistas con portal agregan padding inferior para que el contenido no quede tapado por la barra;
+  - pendiente: convertir los rails de restaurante/marca y sucursal en bottom sheets contextuales para administrar recursos anidados en movil.
 
 - Se creo el proyecto frontend `Norix.App` con Vite oficial y template React + TypeScript.
 - Se instalaron las dependencias acordadas:

@@ -20,6 +20,7 @@ import {
 import { Link, useParams } from 'react-router-dom'
 import { ApiError } from '../../../../shared/api/apiClient'
 import { CommandBar } from '../../../../shared/ui/CommandBar'
+import { MobileBottomNav } from '../../../../shared/ui/MobileBottomNav'
 import { ResourceRail } from '../../../../shared/ui/ResourceRail'
 import { ResourceHeader } from '../../../../shared/ui/ResourceHeader'
 import { TenantSidebar } from '../../../../shared/ui/TenantSidebar'
@@ -123,6 +124,7 @@ export function RestaurantContextPage() {
     <main className="norix-portal text-norix-light">
       <div className="portal-shell flex h-screen overflow-hidden">
         <TenantSidebar />
+        <MobileBottomNav />
 
         <section className="flex min-w-0 flex-1 flex-col overflow-hidden">
           <PortalTopBar />
@@ -130,7 +132,7 @@ export function RestaurantContextPage() {
           <div className="flex min-h-0 flex-1">
             <RestaurantResourceRail restaurantId={id!} restaurantName={title} />
 
-            <div className="subtle-scrollbar min-w-0 flex-1 overflow-y-auto">
+            <div className="subtle-scrollbar min-w-0 flex-1 overflow-y-auto pb-24 xl:pb-0">
           <ResourceHeader
             actions={
               <CommandBar

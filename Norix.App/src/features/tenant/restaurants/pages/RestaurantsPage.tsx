@@ -33,6 +33,7 @@ import {
 import { ResourceHeader } from '../../../../shared/ui/ResourceHeader'
 import { SideDrawer } from '../../../../shared/ui/SideDrawer'
 import { StatusBadge } from '../../../../shared/ui/StatusBadge'
+import { MobileBottomNav } from '../../../../shared/ui/MobileBottomNav'
 import { TenantSidebar } from '../../../../shared/ui/TenantSidebar'
 import { ThemeToggle } from '../../../../shared/ui/ThemeToggle'
 import {
@@ -161,11 +162,12 @@ export function RestaurantsPage() {
     <main className="norix-portal text-norix-light">
       <div className="portal-shell flex h-screen overflow-hidden">
         <TenantSidebar />
+        <MobileBottomNav />
 
         <section className="flex min-w-0 flex-1 flex-col overflow-hidden">
           <PortalTopBar />
 
-          <div className="subtle-scrollbar min-h-0 flex-1 overflow-y-auto">
+          <div className="subtle-scrollbar min-h-0 flex-1 overflow-y-auto pb-24 xl:pb-0">
             <ResourceHeader
               actions={
                 <CommandBar

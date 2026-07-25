@@ -18,6 +18,7 @@ import {
 import { Link } from 'react-router-dom'
 import { useAuthStore } from '../../auth/model/authStore'
 import { CommandBar } from '../../../shared/ui/CommandBar'
+import { MobileBottomNav } from '../../../shared/ui/MobileBottomNav'
 import { TenantSidebar } from '../../../shared/ui/TenantSidebar'
 import { ThemeToggle } from '../../../shared/ui/ThemeToggle'
 
@@ -87,11 +88,12 @@ export function ContextPage() {
     <main className="norix-portal text-norix-light">
       <div className="portal-shell flex h-screen overflow-hidden">
         <TenantSidebar />
+        <MobileBottomNav />
 
         <section className="flex min-w-0 flex-1 flex-col overflow-hidden">
           <TopBar />
 
-          <div className="subtle-scrollbar min-h-0 flex-1 overflow-y-auto">
+          <div className="subtle-scrollbar min-h-0 flex-1 overflow-y-auto pb-24 xl:pb-0">
             <div className="glass-header border-b border-white/10 px-5 pb-0 pt-4 lg:px-6">
               <div className="mb-4 flex items-center gap-2 text-sm text-white/46">
                 <span>Inicio</span>
