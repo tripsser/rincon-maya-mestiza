@@ -1610,6 +1610,10 @@ X-Restaurant-Id: 99999999-9999-9999-9999-999999999999
 - El frontend consume la API por ruta relativa `/api`; Nginx reenvia esas peticiones al servicio interno `api:8080`.
 - Esta decision evita CORS en la primera etapa y mantiene la cookie `httpOnly`, `Secure`, `SameSite=Strict` funcionando bajo el mismo origen publico.
 - PostgreSQL y Redis quedan privados dentro de la red del compose; no se recomienda exponerlos publicamente.
+- Se agrego `cloudflared` como servicio del mismo compose para que el tunnel de Cloudflare viva en la misma red Docker que la aplicacion.
+- El tunnel debe apuntar al origen `http://web:80`, usando el nombre estable del servicio Docker y no una IP dinamica de contenedor.
+- Variable requerida en Coolify para el tunnel:
+  - `CLOUDFLARE_TUNNEL_TOKEN`.
 - Los secretos de despliegue se generan con variables magicas de Coolify:
   - `SERVICE_PASSWORD_POSTGRES`;
   - `SERVICE_PASSWORD_REDIS`;
