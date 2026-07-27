@@ -1614,6 +1614,7 @@ X-Restaurant-Id: 99999999-9999-9999-9999-999999999999
 - El tunnel debe apuntar al origen `http://web:80`, usando el nombre estable del servicio Docker y no una IP dinamica de contenedor.
 - Variable requerida en Coolify para el tunnel:
   - `CLOUDFLARE_TUNNEL_TOKEN`.
+- El compose deja `CLOUDFLARE_TUNNEL_TOKEN` con default vacio para no romper la fase `docker compose build` de Coolify; si falta el valor, fallara solo el servicio `cloudflared` en runtime hasta capturarlo.
 - Los secretos de despliegue se generan con variables magicas de Coolify:
   - `SERVICE_PASSWORD_POSTGRES`;
   - `SERVICE_PASSWORD_REDIS`;

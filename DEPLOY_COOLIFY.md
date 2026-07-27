@@ -77,6 +77,8 @@ CLOUDFLARE_TUNNEL_TOKEN=TOKEN_DEL_TUNNEL
 
 Ese token sale de Cloudflare Zero Trust al crear un tunnel. No se debe subir a git.
 
+Nota para Coolify: el compose no hace fallar el build si el token aun no existe, porque el token se necesita en runtime. Si `CLOUDFLARE_TUNNEL_TOKEN` esta vacio, el servicio `cloudflared` levantara y fallara hasta que se capture la variable.
+
 ## Red interna
 
 Los servicios se comunican por nombre dentro de Docker:
