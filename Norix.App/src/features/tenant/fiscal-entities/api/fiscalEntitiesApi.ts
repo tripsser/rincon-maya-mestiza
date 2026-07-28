@@ -13,6 +13,17 @@ export const fiscalEntitySchema = z.object({
   activo: z.boolean(),
 })
 
+export const fiscalEntityOperationalUnitSchema = z.object({
+  id: z.string(),
+  codigo: z.string(),
+  nombre: z.string(),
+  idRestaurante: z.string(),
+  codigoRestaurante: z.string(),
+  nombreRestaurante: z.string(),
+  activo: z.boolean(),
+  fechaApertura: z.string().nullable(),
+})
+
 export const upsertFiscalEntitySchema = z.object({
   rfc: z.string().trim().min(12, 'El RFC debe tener al menos 12 caracteres.').max(13, 'El RFC no puede exceder 13 caracteres.'),
   razonSocial: z.string().trim().min(1, 'La razon social es requerida.').max(200),
@@ -22,6 +33,7 @@ export const upsertFiscalEntitySchema = z.object({
 })
 
 export type FiscalEntity = z.infer<typeof fiscalEntitySchema>
+export type FiscalEntityOperationalUnit = z.infer<typeof fiscalEntityOperationalUnitSchema>
 export type UpsertFiscalEntityRequest = z.infer<typeof upsertFiscalEntitySchema>
 
 const tenantHeaders = {
@@ -48,6 +60,22 @@ export async function getFiscalEntities(filters: {
   })
 
   return z.array(fiscalEntitySchema).parse(response)
+}
+
+export async function getFiscalEntity(id: string) {
+  const response = await apiFetch<unknown>(`/api/tenant/entidades-fiscales/${id}`, {
+    headers: tenantHeaders,
+  })
+
+  return fiscalEntitySchema.parse(response)
+}
+
+export async function getFiscalEntityOperationalUnits(id: string) {
+  const response = await apiFetch<unknown>(`/api/tenant/entidades-fiscales/${id}/unidades-operativas`, {
+    headers: tenantHeaders,
+  })
+
+  return z.array(fiscalEntityOperationalUnitSchema).parse(response)
 }
 
 export async function createFiscalEntity(request: UpsertFiscalEntityRequest) {

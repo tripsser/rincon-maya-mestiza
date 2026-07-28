@@ -5,7 +5,6 @@
 El despliegue queda separado por servicio, pero orquestado desde un solo `docker-compose.coolify.yml`:
 
 ```text
-cloudflared  Tunnel de Cloudflare dentro de la red Docker
 web          React/Vite servido por Nginx
 api          ASP.NET Core 9 Web API
 postgres     PostgreSQL 16
@@ -14,10 +13,10 @@ redis        Redis 7
 
 El dominio publico debe apuntar al servicio `web`. Nginx sirve el frontend y reenvia `/api/*` al servicio interno `api:8080`, evitando CORS para este primer despliegue.
 
-Si se usa Cloudflare Tunnel, el trafico publico entra por `cloudflared` y este llega al servicio `web` por nombre Docker:
+Si se usa Cloudflare Tunnel, el tunnel vive en el host y entra al proxy de Coolify por HTTPS local:
 
 ```text
-Cloudflare -> cloudflared -> http://web:80
+Cloudflare -> cloudflared host -> https://localhost:443 -> Coolify proxy -> web:80
 ```
 
 ## Recurso en Coolify
@@ -69,22 +68,13 @@ SESSION_EXPIRATION_MINUTES=15
 
 Si despues se quieren secretos administrados manualmente, se puede cambiar el compose, pero para Coolify conviene dejar que genere y persista estos valores.
 
-Para Cloudflare Tunnel se debe configurar esta variable en Coolify:
-
-```env
-CLOUDFLARE_TUNNEL_TOKEN=TOKEN_DEL_TUNNEL
-```
-
-Ese token sale de Cloudflare Zero Trust al crear un tunnel. No se debe subir a git.
-
-Nota para Coolify: el compose no hace fallar el build si el token aun no existe, porque el token se necesita en runtime. Si `CLOUDFLARE_TUNNEL_TOKEN` esta vacio, el servicio `cloudflared` levantara y fallara hasta que se capture la variable.
+El token de Cloudflare Tunnel ya no va en este compose. El tunnel se administra fuera del recurso NORIX, instalado en el host.
 
 ## Red interna
 
 Los servicios se comunican por nombre dentro de Docker:
 
 ```text
-cloudflared -> web:80
 web -> api:8080
 api -> postgres:5432
 api -> redis:6379
@@ -97,23 +87,27 @@ PostgreSQL y Redis no necesitan dominio publico para esta etapa.
 En Cloudflare Zero Trust, configurar el public hostname para que apunte al origen:
 
 ```text
-http://web:80
+https://localhost:443
 ```
 
-No usar IP de contenedor, IP del VPS, `localhost` ni `127.0.0.1`. El nombre `web` es estable porque es el nombre del servicio dentro del `docker-compose.coolify.yml`.
+Activar `No TLS Verify` para ese origen, porque Cloudflare llega al proxy local de Coolify usando `localhost`.
+
+No usar IP de contenedor ni IP dinamica. Coolify enruta por dominio desde su proxy.
 
 Flujo esperado:
 
 ```text
 Internet
 -> Cloudflare
--> cloudflared
+-> cloudflared host
+-> https://localhost:443
+-> Coolify proxy
 -> web:80
 -> /api
 -> api:8080
 ```
 
-Si tambien se configura dominio en Coolify para el servicio `web`, puede servir como acceso alterno directo. Para un despliegue 100% por tunnel, Cloudflare se vuelve la entrada publica principal.
+En Coolify, el recurso `web` debe tener configurado el mismo dominio publico, por ejemplo `https://app.norix.fit`, para que el proxy sepa a que contenedor enrutar.
 
 ## DNS y acceso local
 

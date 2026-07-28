@@ -5,10 +5,11 @@
 - [x] Crear `docker-compose.coolify.yml`.
 - [x] Separar servicios `web` y `api`.
 - [x] Agregar PostgreSQL y Redis.
-- [x] Agregar `cloudflared` como servicio de app.
+- [x] Quitar `cloudflared` del compose de NORIX.
 - [x] Preparar variables Coolify para passwords y JWT.
 - [x] Configurar SSH local con `cloudflared access ssh`.
 - [x] Confirmar acceso SSH al host.
+- [x] Confirmar patron de tunnel host hacia `https://localhost:443`.
 
 ## Pendiente
 
@@ -17,4 +18,3 @@
 - [ ] Revisar warning realtime de Coolify.
 - [ ] Definir backups PostgreSQL.
 - [ ] Definir estrategia de migraciones en produccion.
-

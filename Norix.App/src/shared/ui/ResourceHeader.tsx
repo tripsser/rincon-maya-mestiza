@@ -11,6 +11,7 @@ export interface ResourceTab {
   label: string
   active?: boolean
   disabled?: boolean
+  onClick?: () => void
 }
 
 export function ResourceHeader({
@@ -64,6 +65,7 @@ export function ResourceHeader({
               } ${tab.disabled ? 'cursor-not-allowed opacity-45' : ''}`}
               disabled={tab.disabled}
               key={tab.label}
+              onClick={tab.onClick}
               type="button"
             >
               {tab.label}

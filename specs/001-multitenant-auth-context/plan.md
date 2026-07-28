@@ -20,7 +20,8 @@ Frontend:
 Infraestructura:
 
 - Docker Compose para Coolify.
-- Servicios separados: `web`, `api`, `postgres`, `redis`, `cloudflared`.
+- Servicios separados: `web`, `api`, `postgres`, `redis`.
+- Cloudflare Tunnel vive en el host y entra por el proxy de Coolify.
 
 ## Direccion
 
@@ -41,4 +42,3 @@ La API debe evolucionar a arquitectura por features sin meter logica de negocio 
 - Sesiones en Redis pueden quedar desactualizadas si cambian permisos.
 - La jerarquia tenant/restaurante/unidad puede confundirse si una pantalla mezcla scopes.
 - RLS debe entrar despues de estabilizar contratos de contexto.
-

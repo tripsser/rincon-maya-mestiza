@@ -16,6 +16,7 @@ public static class FiscalEntitiesEndpoints
 
         group.MapGet("", GetFiscalEntitiesAsync);
         group.MapGet("/{id:guid}", GetFiscalEntityAsync);
+        group.MapGet("/{id:guid}/unidades-operativas", GetFiscalEntityOperationalUnitsAsync);
         group.MapPost("", CreateFiscalEntityAsync);
         group.MapPut("/{id:guid}", UpdateFiscalEntityAsync);
         group.MapPatch("/{id:guid}/estado", UpdateFiscalEntityStatusAsync);
@@ -87,6 +88,41 @@ public static class FiscalEntitiesEndpoints
             .FirstOrDefaultAsync(cancellationToken);
 
         return entity is null ? TypedResults.NotFound() : TypedResults.Ok(entity);
+    }
+
+    private static async Task<Results<Ok<IReadOnlyList<FiscalEntityOperationalUnitResponse>>, NotFound>> GetFiscalEntityOperationalUnitsAsync(
+        Guid id,
+        AppDbContext dbContext,
+        ICurrentContext currentContext,
+        CancellationToken cancellationToken)
+    {
+        var fiscalEntityExists = await dbContext.EntidadesFiscales.AnyAsync(
+            entity => entity.Id == id && entity.IdInquilino == currentContext.TenantId,
+            cancellationToken);
+
+        if (!fiscalEntityExists)
+        {
+            return TypedResults.NotFound();
+        }
+
+        var operationalUnits = await (
+                from unidad in dbContext.UnidadesOperativas.AsNoTracking()
+                join restaurante in dbContext.Restaurantes.AsNoTracking() on unidad.IdRestaurante equals restaurante.Id
+                where unidad.IdInquilino == currentContext.TenantId
+                    && unidad.IdEntidadFiscal == id
+                orderby restaurante.Nombre, unidad.Nombre
+                select new FiscalEntityOperationalUnitResponse(
+                    unidad.Id,
+                    unidad.Codigo,
+                    unidad.Nombre,
+                    unidad.IdRestaurante,
+                    restaurante.Codigo,
+                    restaurante.Nombre,
+                    unidad.Activo,
+                    unidad.FechaApertura))
+            .ToArrayAsync(cancellationToken);
+
+        return TypedResults.Ok<IReadOnlyList<FiscalEntityOperationalUnitResponse>>(operationalUnits);
     }
 
     private static async Task<Results<Created<FiscalEntityResponse>, Conflict<string>, BadRequest<string>>> CreateFiscalEntityAsync(
@@ -281,3 +317,13 @@ public sealed record UpsertFiscalEntityRequest(
     string? Telefono);
 
 public sealed record UpdateFiscalEntityStatusRequest(bool Activo);
+
+public sealed record FiscalEntityOperationalUnitResponse(
+    Guid Id,
+    string Codigo,
+    string Nombre,
+    Guid IdRestaurante,
+    string CodigoRestaurante,
+    string NombreRestaurante,
+    bool Activo,
+    DateTime? FechaApertura);

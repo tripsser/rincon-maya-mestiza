@@ -6,6 +6,7 @@ import {
   CheckCircle2,
   CircleHelp,
   Edit3,
+  ExternalLink,
   Landmark,
   Mail,
   MoreHorizontal,
@@ -15,6 +16,7 @@ import {
   ToggleLeft,
   ToggleRight,
 } from 'lucide-react'
+import { Link } from 'react-router-dom'
 import { ApiError } from '../../../../shared/api/apiClient'
 import { CommandBar } from '../../../../shared/ui/CommandBar'
 import {
@@ -198,7 +200,7 @@ export function FiscalEntitiesPage() {
                 <section className="glass-panel p-4">
                   <DataTableShell
                     footer={<DataTableFooter itemLabel="row(s)" pageCount={10} selected={0} total={fiscalEntities.length || 100} />}
-                    minWidth={1040}
+                    minWidth={980}
                     toolbar={
                       <div className="flex flex-col gap-3 lg:flex-row lg:items-center lg:justify-between">
                         <div className="flex flex-wrap items-center gap-2">
@@ -225,6 +227,7 @@ export function FiscalEntitiesPage() {
                         <DataTableHead>
                           <DataTableCheckbox />
                         </DataTableHead>
+                        <DataTableHead>Abrir</DataTableHead>
                         <DataTableHead>RFC</DataTableHead>
                         <DataTableHead>Razon social</DataTableHead>
                         <DataTableHead>Regimen fiscal</DataTableHead>
@@ -235,11 +238,11 @@ export function FiscalEntitiesPage() {
                     </DataTableHeader>
                     <DataTableBody>
                       {fiscalEntitiesQuery.isLoading && (
-                        <DataTableMessageRow colSpan={7}>Cargando entidades fiscales...</DataTableMessageRow>
+                        <DataTableMessageRow colSpan={8}>Cargando entidades fiscales...</DataTableMessageRow>
                       )}
 
                       {!fiscalEntitiesQuery.isLoading && fiscalEntities.length === 0 && (
-                        <DataTableMessageRow colSpan={7}>No hay entidades fiscales para este filtro.</DataTableMessageRow>
+                        <DataTableMessageRow colSpan={8}>No hay entidades fiscales para este filtro.</DataTableMessageRow>
                       )}
 
                       {fiscalEntities.map((entity) => (
@@ -247,9 +250,25 @@ export function FiscalEntitiesPage() {
                           <DataTableCell>
                             <DataTableCheckbox />
                           </DataTableCell>
-                          <DataTableCell className="font-semibold text-norix-green">{entity.rfc}</DataTableCell>
                           <DataTableCell>
-                            <p className="font-medium text-white">{entity.razonSocial}</p>
+                            <Link
+                              className="glass-button inline-flex h-9 items-center gap-2 rounded-md px-3 text-xs font-semibold text-norix-green"
+                              to={`/tenant/entidades-fiscales/${entity.id}`}
+                            >
+                              <ExternalLink size={14} />
+                              Abrir
+                            </Link>
+                          </DataTableCell>
+                          <DataTableCell className="font-semibold text-norix-green">
+                            {entity.rfc}
+                          </DataTableCell>
+                          <DataTableCell>
+                            <Link
+                              className="font-medium text-white hover:text-norix-green"
+                              to={`/tenant/entidades-fiscales/${entity.id}`}
+                            >
+                              {entity.razonSocial}
+                            </Link>
                             <div className="text-xs text-white/34">{entity.id}</div>
                           </DataTableCell>
                           <DataTableCell className="max-w-sm text-white/56">{entity.regimenFiscal}</DataTableCell>

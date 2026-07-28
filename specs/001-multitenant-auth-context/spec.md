@@ -49,7 +49,8 @@ Validar la infraestructura base de autenticacion, sesion distribuida y contexto 
 - [x] Login devuelve sesion valida.
 - [x] `/api/me` devuelve identidad, tenant activo, unidad operativa activa y permisos efectivos.
 - [x] Frontend puede iniciar sesion y ver datos.
-- [x] Deploy separado en Coolify puede levantar web, API, PostgreSQL, Redis y tunnel de app.
+- [x] Deploy separado en Coolify puede levantar web, API, PostgreSQL y Redis.
+- [x] Tunnel del host puede entrar al proxy de Coolify por `https://localhost:443`.
 
 ## Pendientes
 
@@ -58,4 +59,3 @@ Validar la infraestructura base de autenticacion, sesion distribuida y contexto 
 - [ ] Crear tests de autorizacion por contexto.
 - [ ] Definir versionado o invalidacion de permisos en Redis.
 - [ ] Preparar RLS PostgreSQL sin activar reglas peligrosas antes de tiempo.
-
