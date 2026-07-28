@@ -33,6 +33,7 @@ TRUNCATE TABLE
     roles_inquilino_permisos,
     permisos_inquilino,
     roles_inquilino,
+    consecutivos_codigos,
     inquilinos
 RESTART IDENTITY CASCADE;
 

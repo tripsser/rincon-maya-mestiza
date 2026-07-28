@@ -22,7 +22,6 @@ export const restaurantBranchSchema = z.object({
 })
 
 export const upsertRestaurantSchema = z.object({
-  codigo: z.string().trim().min(1, 'El codigo es requerido.').max(40),
   nombre: z.string().trim().min(1, 'El nombre es requerido.').max(150),
   descripcion: z.string().trim().optional(),
   logoUrl: z.string().trim().optional(),

@@ -6,6 +6,20 @@
 
 CREATE EXTENSION IF NOT EXISTS pgcrypto;
 
+CREATE TABLE consecutivos_codigos
+(
+    id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+    scope_tipo VARCHAR(40) NOT NULL,
+    id_scope UUID NOT NULL,
+    entidad VARCHAR(80) NOT NULL,
+    prefijo VARCHAR(20) NOT NULL,
+    ultimo_numero BIGINT NOT NULL,
+    creado_en TIMESTAMP WITHOUT TIME ZONE NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    actualizado_en TIMESTAMP WITHOUT TIME ZONE NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    CONSTRAINT ux_consecutivos_codigos_scope_entidad
+        UNIQUE (scope_tipo, id_scope, entidad)
+);
+
 CREATE TABLE "AspNetUsers"
 (
     "Id" UUID PRIMARY KEY DEFAULT gen_random_uuid(),

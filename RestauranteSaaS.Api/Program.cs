@@ -91,6 +91,7 @@ builder.Services.AddScoped<ICurrentContextSetter>(provider => provider.GetRequir
 
 builder.Services.AddScoped<ISessionService, SessionService>();
 builder.Services.AddScoped<IJwtTokenService, JwtTokenService>();
+builder.Services.AddScoped<ICodigoEntidadService, CodigoEntidadService>();
 
 var app = builder.Build();
 
@@ -141,5 +142,6 @@ app.UseAuthorization();
 app.MapAuthEndpoints();
 app.MapMeEndpoints();
 app.MapTenantRestaurantEndpoints();
+app.MapTenantFiscalEntityEndpoints();
 
 app.Run();

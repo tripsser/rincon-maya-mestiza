@@ -1,5 +1,16 @@
 # Implementacion multitenant
 
+## Nota de organizacion
+
+Desde 2026-07-27 la documentacion nueva de arquitectura, UX, contratos y tareas vivira en `specs/`.
+
+Este archivo queda como bitacora historica del arranque multitenant. No se elimina porque contiene contexto valioso, errores encontrados y decisiones tomadas, pero los modulos nuevos deben documentarse como specs pequenas y revisables.
+
+Specs iniciales:
+
+- `specs/000-self-improving-loop`: ciclo de trabajo para especificar, implementar, verificar y aprender.
+- `specs/001-multitenant-auth-context`: resumen del slice actual de autenticacion, sesion Redis y contexto.
+
 ## Objetivo
 
 Implementar el primer slice funcional de autenticacion, sesion distribuida y contexto operativo para el SaaS multi-tenant de restaurantes.

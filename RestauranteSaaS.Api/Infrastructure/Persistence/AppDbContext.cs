@@ -30,6 +30,7 @@ public sealed class AppDbContext(DbContextOptions<AppDbContext> options)
     public DbSet<RoleOperativoPermiso> RolesOperativosPermisos => Set<RoleOperativoPermiso>();
     public DbSet<AsignacionOperativa> AsignacionesOperativas => Set<AsignacionOperativa>();
     public DbSet<AsignacionOperativaPermiso> AsignacionesOperativasPermisos => Set<AsignacionOperativaPermiso>();
+    public DbSet<ConsecutivoCodigo> ConsecutivosCodigos => Set<ConsecutivoCodigo>();
 
     protected override void OnModelCreating(ModelBuilder builder)
     {
@@ -38,10 +39,29 @@ public sealed class AppDbContext(DbContextOptions<AppDbContext> options)
         builder.HasPostgresExtension("pgcrypto");
 
         MapIdentity(builder);
+        MapCodigoEntities(builder);
         MapTenantAuthorization(builder);
         MapRestaurantAuthorization(builder);
         MapBusinessEntities(builder);
         MapOperationalAuthorization(builder);
+    }
+
+    private static void MapCodigoEntities(ModelBuilder builder)
+    {
+        builder.Entity<ConsecutivoCodigo>(entity =>
+        {
+            entity.ToTable("consecutivos_codigos");
+            entity.HasKey(row => row.Id);
+            entity.Property(row => row.Id).HasColumnName("id").HasDefaultValueSql("gen_random_uuid()");
+            entity.Property(row => row.ScopeTipo).HasColumnName("scope_tipo").HasMaxLength(40);
+            entity.Property(row => row.IdScope).HasColumnName("id_scope");
+            entity.Property(row => row.Entidad).HasColumnName("entidad").HasMaxLength(80);
+            entity.Property(row => row.Prefijo).HasColumnName("prefijo").HasMaxLength(20);
+            entity.Property(row => row.UltimoNumero).HasColumnName("ultimo_numero");
+            entity.Property(row => row.CreadoEn).HasColumnName("creado_en").HasColumnType("timestamp without time zone").HasDefaultValueSql("CURRENT_TIMESTAMP");
+            entity.Property(row => row.ActualizadoEn).HasColumnName("actualizado_en").HasColumnType("timestamp without time zone").HasDefaultValueSql("CURRENT_TIMESTAMP");
+            entity.HasIndex(row => new { row.ScopeTipo, row.IdScope, row.Entidad }).IsUnique().HasDatabaseName("ux_consecutivos_codigos_scope_entidad");
+        });
     }
 
     private static void MapIdentity(ModelBuilder builder)

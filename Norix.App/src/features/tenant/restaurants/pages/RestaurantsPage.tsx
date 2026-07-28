@@ -47,7 +47,6 @@ import {
 } from '../api/restaurantsApi'
 
 const emptyForm: UpsertRestaurantRequest = {
-  codigo: '',
   nombre: '',
   descripcion: '',
   logoUrl: '',
@@ -115,7 +114,6 @@ export function RestaurantsPage() {
   function openEditPanel(restaurant: Restaurant) {
     setEditingRestaurant(restaurant)
     setForm({
-      codigo: restaurant.codigo,
       nombre: restaurant.nombre,
       descripcion: restaurant.descripcion ?? '',
       logoUrl: restaurant.logoUrl ?? '',
@@ -325,12 +323,9 @@ export function RestaurantsPage() {
           >
               <form className="flex min-h-0 flex-1 flex-col" onSubmit={handleSubmit}>
                 <div className="grid flex-1 content-start gap-4 overflow-y-auto pr-1">
-                <FormField
-                  label="Codigo"
-                  onChange={(value) => setForm((current) => ({ ...current, codigo: value }))}
-                  placeholder="LPGRILL"
-                  value={form.codigo}
-                />
+                {editingRestaurant && (
+                  <ReadOnlyField label="Codigo" value={editingRestaurant.codigo} />
+                )}
                 <FormField
                   label="Nombre"
                   onChange={(value) => setForm((current) => ({ ...current, nombre: value }))}
@@ -462,5 +457,16 @@ function FormField({
         value={value ?? ''}
       />
     </label>
+  )
+}
+
+function ReadOnlyField({ label, value }: { label: string; value: string }) {
+  return (
+    <div className="grid gap-2">
+      <span className="text-sm font-medium text-white/72">{label}</span>
+      <div className="flex h-11 items-center rounded-md border border-white/10 bg-white/[0.025] px-3 text-sm font-semibold text-norix-green">
+        {value}
+      </div>
+    </div>
   )
 }

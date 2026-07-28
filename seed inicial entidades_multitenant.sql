@@ -96,7 +96,7 @@ BEGIN
         actualizado_en = CURRENT_TIMESTAMP;
 
     INSERT INTO inquilinos (id, codigo, nombre, estado, creado_en)
-    VALUES (v_inquilino_id, 'RINCON-MAYA', 'Rincon Maya', 'activo', CURRENT_TIMESTAMP)
+    VALUES (v_inquilino_id, 'TEN-0001', 'Rincon Maya', 'activo', CURRENT_TIMESTAMP)
     ON CONFLICT (id) DO UPDATE
     SET codigo = EXCLUDED.codigo,
         nombre = EXCLUDED.nombre,
@@ -175,7 +175,7 @@ BEGIN
     (
         v_restaurante_id,
         v_inquilino_id,
-        'RM-REST',
+        'RES-0001',
         'Rincon Maya Restaurante',
         'Restaurante demo para pruebas de infraestructura multitenant',
         NULL,
@@ -342,7 +342,7 @@ BEGIN
     VALUES
     (
         v_unidad_operativa_id,
-        'RM-CENTRO',
+        'SUC-0001',
         v_inquilino_id,
         v_restaurante_id,
         v_entidad_fiscal_id,
@@ -454,6 +454,25 @@ BEGIN
         activo = EXCLUDED.activo,
         fecha_inicio = EXCLUDED.fecha_inicio,
         fecha_fin = EXCLUDED.fecha_fin;
+
+    INSERT INTO consecutivos_codigos
+    (
+        scope_tipo,
+        id_scope,
+        entidad,
+        prefijo,
+        ultimo_numero,
+        actualizado_en
+    )
+    VALUES
+        ('plataforma', '00000000-0000-0000-0000-000000000000', 'inquilinos', 'TEN', 1, CURRENT_TIMESTAMP),
+        ('tenant', v_inquilino_id, 'restaurantes', 'RES', 1, CURRENT_TIMESTAMP),
+        ('tenant', v_inquilino_id, 'empleados', 'EMP', 1, CURRENT_TIMESTAMP),
+        ('restaurante', v_restaurante_id, 'unidades_operativas', 'SUC', 1, CURRENT_TIMESTAMP)
+    ON CONFLICT (scope_tipo, id_scope, entidad) DO UPDATE
+    SET prefijo = EXCLUDED.prefijo,
+        ultimo_numero = GREATEST(consecutivos_codigos.ultimo_numero, EXCLUDED.ultimo_numero),
+        actualizado_en = CURRENT_TIMESTAMP;
 END $$;
 
 COMMIT;

@@ -33,7 +33,7 @@ const groups = [
     items: [
       { label: 'Restaurantes / Marcas', icon: Store, to: '/tenant/restaurantes' },
       { label: 'Unidades operativas', icon: Building2 },
-      { label: 'Entidades fiscales', icon: Landmark },
+      { label: 'Entidades fiscales', icon: Landmark, to: '/tenant/entidades-fiscales' },
       { label: 'Direcciones', icon: MapPin },
     ],
   },

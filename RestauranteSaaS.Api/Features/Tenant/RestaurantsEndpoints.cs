@@ -115,10 +115,11 @@ public static class RestaurantsEndpoints
         return restaurant is null ? TypedResults.NotFound() : TypedResults.Ok(restaurant);
     }
 
-    private static async Task<Results<Created<RestaurantDetailResponse>, Conflict<string>, BadRequest<string>>> CreateRestaurantAsync(
+    private static async Task<Results<Created<RestaurantDetailResponse>, BadRequest<string>>> CreateRestaurantAsync(
         UpsertRestaurantRequest request,
         AppDbContext dbContext,
         ICurrentContext currentContext,
+        ICodigoEntidadService codigoEntidadService,
         CancellationToken cancellationToken)
     {
         var validationError = Validate(request);
@@ -127,15 +128,11 @@ public static class RestaurantsEndpoints
             return TypedResults.BadRequest(validationError);
         }
 
-        var codigo = NormalizeCode(request.Codigo);
-        var exists = await dbContext.Restaurantes.AnyAsync(
-            restaurante => restaurante.IdInquilino == currentContext.TenantId && restaurante.Codigo == codigo,
+        var codigo = await codigoEntidadService.GenerarAsync(
+            "restaurantes",
+            "tenant",
+            currentContext.TenantId,
             cancellationToken);
-
-        if (exists)
-        {
-            return TypedResults.Conflict("Ya existe un restaurante con ese codigo en el inquilino actual.");
-        }
 
         var restaurant = new Restaurante
         {
@@ -154,7 +151,7 @@ public static class RestaurantsEndpoints
         return TypedResults.Created($"/api/tenant/restaurantes/{restaurant.Id}", response);
     }
 
-    private static async Task<Results<Ok<RestaurantDetailResponse>, NotFound, Conflict<string>, BadRequest<string>>> UpdateRestaurantAsync(
+    private static async Task<Results<Ok<RestaurantDetailResponse>, NotFound, BadRequest<string>>> UpdateRestaurantAsync(
         Guid id,
         UpsertRestaurantRequest request,
         AppDbContext dbContext,
@@ -177,19 +174,6 @@ public static class RestaurantsEndpoints
             return TypedResults.NotFound();
         }
 
-        var codigo = NormalizeCode(request.Codigo);
-        var codeExists = await dbContext.Restaurantes.AnyAsync(
-            restaurante => restaurante.IdInquilino == currentContext.TenantId
-                && restaurante.Id != id
-                && restaurante.Codigo == codigo,
-            cancellationToken);
-
-        if (codeExists)
-        {
-            return TypedResults.Conflict("Ya existe otro restaurante con ese codigo en el inquilino actual.");
-        }
-
-        restaurant.Codigo = codigo;
         restaurant.Nombre = request.Nombre.Trim();
         restaurant.Descripcion = NormalizeOptional(request.Descripcion);
         restaurant.LogoUrl = NormalizeOptional(request.LogoUrl);
@@ -224,16 +208,6 @@ public static class RestaurantsEndpoints
 
     private static string? Validate(UpsertRestaurantRequest request)
     {
-        if (string.IsNullOrWhiteSpace(request.Codigo))
-        {
-            return "El codigo es requerido.";
-        }
-
-        if (request.Codigo.Trim().Length > 40)
-        {
-            return "El codigo no puede exceder 40 caracteres.";
-        }
-
         if (string.IsNullOrWhiteSpace(request.Nombre))
         {
             return "El nombre es requerido.";
@@ -245,11 +219,6 @@ public static class RestaurantsEndpoints
         }
 
         return null;
-    }
-
-    private static string NormalizeCode(string value)
-    {
-        return value.Trim().ToUpperInvariant();
     }
 
     private static string? NormalizeOptional(string? value)
@@ -288,7 +257,6 @@ public sealed record RestaurantDetailResponse(
     bool Activo);
 
 public sealed record UpsertRestaurantRequest(
-    string Codigo,
     string Nombre,
     string? Descripcion,
     string? LogoUrl);

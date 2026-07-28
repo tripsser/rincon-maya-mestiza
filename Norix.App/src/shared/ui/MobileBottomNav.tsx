@@ -36,7 +36,7 @@ const sheetGroups = [
     items: [
       { icon: Store, label: 'Restaurantes / Marcas', to: '/tenant/restaurantes' },
       { icon: Building2, label: 'Unidades operativas' },
-      { icon: Landmark, label: 'Entidades fiscales' },
+      { icon: Landmark, label: 'Entidades fiscales', to: '/tenant/entidades-fiscales' },
       { icon: MapPin, label: 'Direcciones' },
     ],
   },
