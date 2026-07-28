@@ -41,6 +41,7 @@ function CommandButton({
 }) {
   return (
     <button
+      aria-label={typeof children === 'string' ? children : undefined}
       className={`resource-command flex h-8 items-center gap-2 px-2.5 text-sm transition ${
         primary
           ? 'font-semibold text-white'

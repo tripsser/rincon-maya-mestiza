@@ -7,11 +7,13 @@
 - [ ] Definir toolbar canonica.
 - [ ] Definir estados canonicos.
 - [ ] Implementar action bar de seleccion.
-- [ ] Adaptar restaurantes/marcas al patron.
+- [ ] Adaptar colecciones restantes al patron.
 - [ ] Validar mobile con cards o filas compactas.
 - [ ] Actualizar retro con hallazgos.
 
 ## Hecho
 
 - [x] Crear spec del patron.
-
+- [x] Adaptar restaurantes/marcas al patron.
+- [x] Adaptar entidades fiscales al patron.
+- [x] Adaptar sucursales/unidades operativas dentro del recurso restaurante al patron.

@@ -1,9 +1,10 @@
-import type { FormEvent, ReactNode } from 'react'
+import type { FormEvent } from 'react'
 import { useState } from 'react'
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
-import { Copy, Edit3, ExternalLink, Landmark, Mail, MapPin, Phone, ShieldCheck, ToggleLeft, ToggleRight } from 'lucide-react'
+import { Edit3, ExternalLink, Landmark, Mail, MapPin, Phone, ShieldCheck, ToggleLeft, ToggleRight } from 'lucide-react'
 import { Link, useParams } from 'react-router-dom'
 import { ApiError } from '../../../../shared/api/apiClient'
+import { formatDate } from '../../../../shared/lib/formatters'
 import { CommandBar } from '../../../../shared/ui/CommandBar'
 import {
   DataTableBody,
@@ -15,12 +16,10 @@ import {
   DataTableRow,
   DataTableShell,
 } from '../../../../shared/ui/DataTable'
-import { MobileBottomNav } from '../../../../shared/ui/MobileBottomNav'
 import { ResourceHeader } from '../../../../shared/ui/ResourceHeader'
+import { FormField, InfoRow, PlaceholderPanel } from '../../../../shared/ui/ResourcePanels'
 import { SideDrawer } from '../../../../shared/ui/SideDrawer'
 import { StatusBadge } from '../../../../shared/ui/StatusBadge'
-import { TenantSidebar } from '../../../../shared/ui/TenantSidebar'
-import { PortalTopBar } from '../../restaurants/pages/RestaurantContextPage'
 import {
   getFiscalEntity,
   getFiscalEntityOperationalUnits,
@@ -128,14 +127,7 @@ export function FiscalEntityContextPage() {
   }
 
   return (
-    <main className="norix-portal text-norix-light">
-      <div className="portal-shell flex h-screen overflow-hidden">
-        <TenantSidebar />
-        <MobileBottomNav />
-
-        <section className="flex min-w-0 flex-1 flex-col overflow-hidden">
-          <PortalTopBar />
-
+    <>
           <div className="subtle-scrollbar min-h-0 flex-1 overflow-y-auto pb-24 xl:pb-0">
             <ResourceHeader
               actions={
@@ -396,22 +388,8 @@ export function FiscalEntityContextPage() {
               </form>
             </SideDrawer>
           )}
-        </section>
-      </div>
-    </main>
+    </>
   )
-}
-
-function formatDate(value: string | null) {
-  if (!value) {
-    return 'Sin fecha'
-  }
-
-  return new Intl.DateTimeFormat('es-MX', {
-    day: '2-digit',
-    month: 'short',
-    year: 'numeric',
-  }).format(new Date(value))
 }
 
 function formatApiError(error: unknown) {
@@ -420,79 +398,4 @@ function formatApiError(error: unknown) {
   }
 
   return error instanceof Error ? error.message : 'sin detalle'
-}
-
-function PlaceholderPanel({ icon, text, title }: { icon: ReactNode; text: string; title: string }) {
-  return (
-    <article className="glass-panel p-5">
-      <div className="flex items-start gap-3">
-        <span className="grid h-10 w-10 place-items-center rounded-md bg-norix-blue/12 text-norix-blue">{icon}</span>
-        <div>
-          <h2 className="text-sm font-semibold text-white">{title}</h2>
-          <p className="mt-1 text-sm leading-6 text-white/52">{text}</p>
-        </div>
-      </div>
-    </article>
-  )
-}
-
-function InfoRow({
-  copy = false,
-  icon,
-  label,
-  tone = 'default',
-  value,
-}: {
-  copy?: boolean
-  icon?: ReactNode
-  label: string
-  tone?: 'default' | 'green' | 'muted'
-  value?: string | null
-}) {
-  const displayValue = value || 'No registrado'
-  const valueClass =
-    tone === 'green'
-      ? 'text-norix-green'
-      : tone === 'muted'
-        ? 'text-white/44'
-        : 'text-white/72'
-
-  return (
-    <div className="grid gap-1 sm:grid-cols-[12rem_minmax(0,1fr)] sm:gap-4">
-      <dt className="text-sm font-semibold text-white/70">{label}</dt>
-      <dd className={`flex min-w-0 items-center gap-2 text-sm ${valueClass}`}>
-        {icon && <span className="shrink-0 text-white/36">{icon}</span>}
-        <span className="min-w-0 truncate">{displayValue}</span>
-        {copy && value && (
-          <button className="text-norix-blue hover:text-white" title="Copiar" type="button">
-            <Copy size={15} />
-          </button>
-        )}
-      </dd>
-    </div>
-  )
-}
-
-function FormField({
-  label,
-  value,
-  placeholder,
-  onChange,
-}: {
-  label: string
-  value?: string
-  placeholder: string
-  onChange: (value: string) => void
-}) {
-  return (
-    <label className="grid gap-2">
-      <span className="text-sm font-medium text-white/72">{label}</span>
-      <input
-        className="h-11 rounded-md border border-white/10 bg-white/[0.045] px-3 text-sm text-white outline-none focus:border-norix-green/60"
-        onChange={(event) => onChange(event.target.value)}
-        placeholder={placeholder}
-        value={value ?? ''}
-      />
-    </label>
-  )
 }

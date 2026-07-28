@@ -22,6 +22,8 @@ Incluye:
 - Vista individual en `/tenant/entidades-fiscales/{id}`.
 - Edicion desde drawer dentro del detalle.
 - Pestaña `Unidades operativas` dentro del detalle, filtrada por la entidad fiscal.
+- Servicio de aplicacion `FiscalEntitiesService` para evitar logica de consulta/validacion dentro de endpoints.
+- Componentes frontend compartidos para topbar, summary cards, fields, info rows y paneles simples.
 
 No incluye:
 
@@ -38,5 +40,7 @@ No incluye:
 - [x] La vista individual permite editar y activar/desactivar.
 - [x] API expone unidades operativas por entidad fiscal.
 - [x] Frontend muestra unidades operativas al seleccionar la pestaña.
+- [x] Endpoint queda como adaptador HTTP y delega logica al servicio de feature.
+- [x] Frontend reutiliza componentes compartidos del patron recurso/CRUD.
 - [x] Build backend pasa.
 - [x] Build frontend pasa.

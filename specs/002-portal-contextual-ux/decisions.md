@@ -58,3 +58,44 @@ Consecuencia:
 
 Los formularios deben poder vivir en `SideDrawer` y cerrar sin perder la coleccion.
 
+### 2026-07-28 - Modo Fijo De Rails
+
+Decision:
+
+Cada navbar/rail desktop puede operar en dos modos fijos: `expanded` y `compact`.
+
+Motivo:
+
+El despliegue automatico por hover se siente incomodo en una navegacion jerarquica densa. El usuario debe decidir si quiere la barra abierta o contraida.
+
+Consecuencia:
+
+`TenantSidebar` y `ResourceRail` comparten el mismo hook y control visual. Cuando un rail esta contraido, los items y chips principales exponen tooltip nativo mediante `title` y `aria-label`.
+
+### 2026-07-28 - Layout Persistente Por Nivel
+
+Decision:
+
+El sidebar tenant, el rail restaurante/marca y el rail unidad operativa/sucursal viven en layouts persistentes con `Outlet`.
+
+Motivo:
+
+La navegacion debe sentirse como Azure: el marco del portal no se recarga ni reanima completo. Solo cambia el contenido del contexto activo.
+
+Consecuencia:
+
+Las paginas de coleccion/detalle ya no deben montar `TenantSidebar`, `PortalTopBar` ni rails de recurso directamente. Cada pagina solo renderiza su area de contenido y sus drawers.
+
+### 2026-07-28 - Separacion Semantica De Render Tree
+
+Decision:
+
+Los rails de recurso viven en `features/*/components`, no dentro de archivos `pages`.
+
+Motivo:
+
+Una pagina representa contenido navegable. Un rail representa navegacion contextual persistente. Mezclarlos hace que los layouts dependan de pantallas especificas y confunde el arbol de renderizado.
+
+Consecuencia:
+
+`app/layouts` puede importar componentes de feature para componer el shell, pero no debe importar rails desde `pages`. Las paginas no deben exportar piezas de navegacion persistente.

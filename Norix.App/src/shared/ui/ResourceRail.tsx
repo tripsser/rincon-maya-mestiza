@@ -1,8 +1,10 @@
 import { useEffect, useState } from 'react'
 import type { ReactNode } from 'react'
-import { Pin, PinOff } from 'lucide-react'
 import { Link, useLocation } from 'react-router-dom'
 import { ContextRailChip } from './ContextRailChip'
+import { RailTooltip } from './RailTooltip'
+import { RailModeControl } from './RailModeControl'
+import { useRailDisplayMode } from './useRailDisplayMode'
 
 export type ResourceRailItem = {
   icon: ReactNode
@@ -43,16 +45,13 @@ export function ResourceRail({
   title,
 }: ResourceRailProps) {
   const location = useLocation()
-  const [isPinned, setIsPinned] = useState(() => localStorage.getItem(storageKey) === 'true')
-  const [isHovered, setIsHovered] = useState(false)
+  const { isExpanded, mode, setMode } = useRailDisplayMode({
+    defaultMode: forceCompact ? 'compact' : 'expanded',
+    storageKey,
+  })
   const [isSwitcherOpen, setIsSwitcherOpen] = useState(false)
-  const isExpanded = isHovered || (!forceCompact && isPinned)
   const railClass = isExpanded ? 'resource-rail-expanded' : 'resource-rail-compact'
   const canSwitch = switcherItems.length > 0
-
-  useEffect(() => {
-    localStorage.setItem(storageKey, String(isPinned))
-  }, [isPinned, storageKey])
 
   useEffect(() => {
     if (!isExpanded) {
@@ -64,10 +63,8 @@ export function ResourceRail({
     <aside
       className={`resource-rail ${railClass} hidden h-full shrink-0 overflow-hidden border-r border-white/10 bg-black/16 backdrop-blur-xl xl:block`}
       data-accent={accent}
-      onMouseEnter={() => setIsHovered(true)}
-      onMouseLeave={() => setIsHovered(false)}
     >
-      <div className={`resource-rail-inner relative flex h-full min-h-0 flex-col ${isExpanded ? 'p-3' : 'px-2 py-3'}`}>
+      <div className={`resource-rail-inner relative flex h-full min-h-0 flex-col ${isExpanded ? 'p-3' : 'rail-compact-stack py-3'}`}>
         <div className="resource-rail-top-spacer shrink-0" />
         <ContextRailChip
           accent={accent}
@@ -110,7 +107,7 @@ export function ResourceRail({
           </div>
         )}
 
-        <div className={`resource-rail-control mb-3 flex items-center ${isExpanded ? 'justify-between px-1' : 'justify-center'}`}>
+        <div className={`resource-rail-control mb-3 flex items-center ${isExpanded ? 'justify-between px-1' : 'rail-compact-control'}`}>
           <p
             className={`text-[0.64rem] font-semibold uppercase tracking-[0.2em] text-white/34 transition-[max-width,opacity] duration-200 ${
               isExpanded ? 'max-w-32 opacity-100' : 'sr-only max-w-0 opacity-0'
@@ -118,14 +115,7 @@ export function ResourceRail({
           >
             Navegacion
           </p>
-          <button
-            className="grid h-8 w-8 place-items-center rounded-md text-white/42 hover:bg-white/[0.04] hover:text-white"
-            onClick={() => setIsPinned((current) => !current)}
-            title={isPinned ? 'Contraer rail' : 'Fijar rail'}
-            type="button"
-          >
-            {isPinned ? <PinOff size={15} /> : <Pin size={15} />}
-          </button>
+          <RailModeControl expanded={isExpanded} mode={mode} onChange={setMode} />
         </div>
 
         <nav className="subtle-scrollbar min-h-0 flex-1 overflow-y-auto pb-2">
@@ -170,9 +160,9 @@ function RailItem({
   label: string
   to?: string
 }) {
-  const className = `flex w-full items-center rounded-md py-2 text-left text-sm transition ${
+  const className = `flex items-center rounded-md py-2 text-left text-sm transition ${
     active ? 'nav-active text-white' : 'text-white/58 hover:bg-white/[0.04] hover:text-white'
-  } ${expanded ? 'gap-3 px-3' : 'justify-center gap-0 px-2'}`
+  } ${expanded ? 'rail-expanded-item gap-3 px-3' : 'rail-compact-item gap-0'}`
 
   const content = (
     <>
@@ -191,16 +181,24 @@ function RailItem({
 
   if (to) {
     return (
-      <Link className={className} title={label} to={to}>
-        {content}
-      </Link>
+      <RailTooltip enabled={!expanded} label={label}>
+        {(tooltipProps) => (
+          <Link {...tooltipProps} aria-label={label} className={className} to={to}>
+            {content}
+          </Link>
+        )}
+      </RailTooltip>
     )
   }
 
   return (
-    <button className={className} title={label} type="button">
-      {content}
-    </button>
+    <RailTooltip enabled={!expanded} label={label}>
+      {(tooltipProps) => (
+        <button {...tooltipProps} aria-label={label} className={className} type="button">
+          {content}
+        </button>
+      )}
+    </RailTooltip>
   )
 }
 

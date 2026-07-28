@@ -92,6 +92,7 @@ builder.Services.AddScoped<ICurrentContextSetter>(provider => provider.GetRequir
 builder.Services.AddScoped<ISessionService, SessionService>();
 builder.Services.AddScoped<IJwtTokenService, JwtTokenService>();
 builder.Services.AddScoped<ICodigoEntidadService, CodigoEntidadService>();
+builder.Services.AddScoped<FiscalEntitiesService>();
 
 var app = builder.Build();
 

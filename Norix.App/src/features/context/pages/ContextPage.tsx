@@ -2,15 +2,11 @@ import type { ReactNode } from 'react'
 import type { LucideIcon } from 'lucide-react'
 import {
   Activity,
-  Bell,
   Building2,
   ChevronRight,
-  CircleHelp,
   Copy,
   Landmark,
   MapPin,
-  Search,
-  Settings,
   ShieldCheck,
   Store,
   Users,
@@ -18,9 +14,6 @@ import {
 import { Link } from 'react-router-dom'
 import { useAuthStore } from '../../auth/model/authStore'
 import { CommandBar } from '../../../shared/ui/CommandBar'
-import { MobileBottomNav } from '../../../shared/ui/MobileBottomNav'
-import { TenantSidebar } from '../../../shared/ui/TenantSidebar'
-import { ThemeToggle } from '../../../shared/ui/ThemeToggle'
 
 const tenant = {
   id: '3f2c8b90-7d0e-4c4a-a5e1-8f9b2cf1d7b8',
@@ -85,14 +78,6 @@ export function ContextPage() {
   const sessionId = useAuthStore((state) => state.sessionId)
 
   return (
-    <main className="norix-portal text-norix-light">
-      <div className="portal-shell flex h-screen overflow-hidden">
-        <TenantSidebar />
-        <MobileBottomNav />
-
-        <section className="flex min-w-0 flex-1 flex-col overflow-hidden">
-          <TopBar />
-
           <div className="subtle-scrollbar min-h-0 flex-1 overflow-y-auto pb-24 xl:pb-0">
             <div className="glass-header border-b border-white/10 px-5 pb-0 pt-4 lg:px-6">
               <div className="mb-4 flex items-center gap-2 text-sm text-white/46">
@@ -223,35 +208,6 @@ export function ContextPage() {
             </aside>
             </div>
           </div>
-        </section>
-      </div>
-    </main>
-  )
-}
-
-function TopBar() {
-  return (
-    <header className="glass-topbar relative flex h-12 items-center justify-end px-5 lg:px-6">
-      <label className="glass-button absolute left-1/2 hidden h-8 w-[34rem] max-w-[48vw] -translate-x-1/2 items-center gap-2 rounded-md px-3 text-xs text-white/38 lg:flex">
-        <Search size={14} />
-        <input
-          className="w-full border-0 bg-transparent text-xs text-white outline-none placeholder:text-white/34"
-          placeholder="Buscar recursos, servicios y documentos (Ctrl+/)"
-        />
-      </label>
-
-      <div className="flex items-center gap-4 text-white/56">
-        <Search size={17} className="lg:hidden" />
-        <Bell size={17} />
-        <Settings size={17} />
-        <CircleHelp size={17} />
-        <ThemeToggle />
-        <button className="glass-button flex items-center gap-2 rounded-md px-3 py-1.5 text-xs text-white/72">
-          <span className="grid h-5 w-5 place-items-center rounded bg-norix-blue/20 text-norix-blue">G</span>
-          Portal global
-        </button>
-      </div>
-    </header>
   )
 }
 

@@ -1,18 +1,14 @@
-import type { FormEvent, ReactNode } from 'react'
+import type { FormEvent } from 'react'
 import { useState } from 'react'
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
 import {
-  Bell,
   CheckCircle2,
-  CircleHelp,
   Edit3,
   ExternalLink,
   Landmark,
   Mail,
   MoreHorizontal,
   Phone,
-  Search,
-  Settings,
   ToggleLeft,
   ToggleRight,
 } from 'lucide-react'
@@ -31,12 +27,10 @@ import {
   DataTableRow,
   DataTableShell,
 } from '../../../../shared/ui/DataTable'
-import { MobileBottomNav } from '../../../../shared/ui/MobileBottomNav'
 import { ResourceHeader } from '../../../../shared/ui/ResourceHeader'
+import { FormField, SummaryCard } from '../../../../shared/ui/ResourcePanels'
 import { SideDrawer } from '../../../../shared/ui/SideDrawer'
 import { StatusBadge } from '../../../../shared/ui/StatusBadge'
-import { TenantSidebar } from '../../../../shared/ui/TenantSidebar'
-import { ThemeToggle } from '../../../../shared/ui/ThemeToggle'
 import {
   createFiscalEntity,
   getFiscalEntities,
@@ -162,14 +156,7 @@ export function FiscalEntitiesPage() {
   }
 
   return (
-    <main className="norix-portal text-norix-light">
-      <div className="portal-shell flex h-screen overflow-hidden">
-        <TenantSidebar />
-        <MobileBottomNav />
-
-        <section className="flex min-w-0 flex-1 flex-col overflow-hidden">
-          <PortalTopBar />
-
+    <>
           <div className="subtle-scrollbar min-h-0 flex-1 overflow-y-auto pb-24 xl:pb-0">
             <ResourceHeader
               actions={
@@ -225,7 +212,7 @@ export function FiscalEntitiesPage() {
                     <DataTableHeader>
                       <tr>
                         <DataTableHead>
-                          <DataTableCheckbox />
+                          <DataTableCheckbox label="Seleccionar todas las entidades fiscales" />
                         </DataTableHead>
                         <DataTableHead>Abrir</DataTableHead>
                         <DataTableHead>RFC</DataTableHead>
@@ -248,7 +235,7 @@ export function FiscalEntitiesPage() {
                       {fiscalEntities.map((entity) => (
                         <DataTableRow key={entity.id}>
                           <DataTableCell>
-                            <DataTableCheckbox />
+                            <DataTableCheckbox label={`Seleccionar entidad fiscal ${entity.razonSocial}`} />
                           </DataTableCell>
                           <DataTableCell>
                             <Link
@@ -365,61 +352,6 @@ export function FiscalEntitiesPage() {
               </form>
             </SideDrawer>
           )}
-        </section>
-      </div>
-    </main>
-  )
-}
-
-function PortalTopBar() {
-  return (
-    <header className="glass-topbar relative flex h-12 items-center justify-end px-5 lg:px-6">
-      <label className="glass-button absolute left-1/2 hidden h-8 w-[34rem] max-w-[48vw] -translate-x-1/2 items-center gap-2 rounded-md px-3 text-xs text-white/38 lg:flex">
-        <Search size={14} />
-        <input className="w-full border-0 bg-transparent text-xs text-white outline-none placeholder:text-white/34" placeholder="Buscar recursos, servicios y documentos (Ctrl+/)" />
-      </label>
-      <div className="flex items-center gap-4 text-white/56">
-        <Search size={17} className="lg:hidden" />
-        <Bell size={17} />
-        <Settings size={17} />
-        <CircleHelp size={17} />
-        <ThemeToggle />
-      </div>
-    </header>
-  )
-}
-
-function SummaryCard({ icon, label, value, tone = 'blue' }: { icon: ReactNode; label: string; value: string; tone?: 'blue' | 'green' | 'violet' }) {
-  const toneClass =
-    tone === 'green'
-      ? 'text-norix-green bg-norix-green/12'
-      : tone === 'violet'
-        ? 'text-norix-violet bg-norix-violet/12'
-        : 'text-norix-blue bg-norix-blue/12'
-
-  return (
-    <article className="glass-card p-4">
-      <div className="flex items-center gap-3">
-        <span className={`grid h-10 w-10 place-items-center rounded-md ${toneClass}`}>{icon}</span>
-        <div>
-          <p className="text-xs uppercase tracking-[0.16em] text-white/38">{label}</p>
-          <p className="mt-1 text-2xl font-semibold text-white">{value}</p>
-        </div>
-      </div>
-    </article>
-  )
-}
-
-function FormField({ label, value, placeholder, onChange }: { label: string; value?: string; placeholder: string; onChange: (value: string) => void }) {
-  return (
-    <label className="grid gap-2">
-      <span className="text-sm font-medium text-white/72">{label}</span>
-      <input
-        className="h-11 rounded-md border border-white/10 bg-white/[0.045] px-3 text-sm text-white outline-none focus:border-norix-green/60"
-        onChange={(event) => onChange(event.target.value)}
-        placeholder={placeholder}
-        value={value ?? ''}
-      />
-    </label>
+    </>
   )
 }

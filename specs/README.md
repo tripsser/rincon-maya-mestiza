@@ -34,6 +34,19 @@ Archivos recomendados:
 
 No todos los archivos son obligatorios para cada spec. Si el cambio es chico, se puede usar solo `spec.md`, `tasks.md` y `retro.md`.
 
+## Estados Canonicos
+
+- `Borrador`
+- `Aterrizada`
+- `En implementacion`
+- `Implementada`
+- `Validada`
+- `Pausada`
+- `Replanteada`
+- `Congelada`
+
+Los detalles de transicion, DoD y regla de documentacion viven en `000-self-improving-loop`.
+
 ## Estado Inicial
 
 - `000-self-improving-loop`: define como vamos a trabajar.
@@ -44,6 +57,8 @@ No todos los archivos son obligatorios para cada spec. Si el cambio es chico, se
 - `008-crm-mensajeria`: aterriza lo mejor de Forja, Vocero CRM, Inmox Community y wacrm para un modulo CRM/mensajeria propio.
 - `009-codigos-humanos-entidades`: define como generar codigos humanos de negocio sin captura manual.
 - `010-crud-entidades-fiscales`: CRUD de entidades fiscales del tenant con tabla y drawer.
+- `011-accesibilidad-frontend`: baseline de accesibilidad para foco, dialogs, tabs, labels y navegacion.
+- `backlog.md`: ideas aun no aterrizadas como specs ejecutables.
 
 ## Specs Pendientes Sugeridas
 

@@ -137,6 +137,26 @@ button {
   cursor: pointer;
 }
 
+button:focus-visible,
+a:focus-visible,
+[tabindex]:focus-visible {
+  outline: 2px solid rgb(var(--norix-rgb-green) / 88%);
+  outline-offset: 3px;
+  box-shadow:
+    0 0 0 4px rgb(var(--norix-rgb-green) / 14%),
+    0 0 0 1px rgb(var(--norix-rgb-blue) / 18%);
+}
+
+input:focus-visible,
+textarea:focus-visible,
+select:focus-visible {
+  outline: none;
+  box-shadow:
+    inset 0 0 0 1px rgb(var(--norix-rgb-green) / 76%),
+    inset 0 0 0 4px rgb(var(--norix-rgb-green) / 9%),
+    0 0 18px rgb(var(--norix-rgb-green) / 8%);
+}
+
 #root {
   min-height: 100vh;
 }
@@ -694,17 +714,29 @@ button {
 }
 
 .data-table-checkbox {
-  display: inline-block;
+  appearance: none;
+  display: inline-grid;
   width: 1rem;
   height: 1rem;
+  place-items: center;
   border: 1px solid rgb(var(--norix-rgb-light) / 18%);
   border-radius: 0.25rem;
   background: rgb(var(--norix-rgb-light) / 3%);
+  cursor: pointer;
 }
 
-.data-table-checkbox-checked {
+.data-table-checkbox:checked {
   border-color: var(--norix-blue);
   background: var(--norix-blue);
+}
+
+.data-table-checkbox:checked::after {
+  content: '';
+  width: 0.42rem;
+  height: 0.22rem;
+  border-bottom: 2px solid white;
+  border-left: 2px solid white;
+  transform: translateY(-1px) rotate(-45deg);
 }
 
 .context-chip {
@@ -1219,8 +1251,22 @@ button {
   }
 }
 
+@keyframes norix-tooltip-in {
+  from {
+    opacity: 0;
+    transform: translate3d(-4px, -50%, 0) scale(0.98);
+  }
+  to {
+    opacity: 1;
+    transform: translate3d(0, -50%, 0) scale(1);
+  }
+}
+
 .glass-sidebar {
+  --rail-compact-width: 5rem;
+  --rail-compact-item: 3.75rem;
   transition:
+    flex-basis 280ms cubic-bezier(0.22, 1, 0.36, 1),
     width 280ms cubic-bezier(0.22, 1, 0.36, 1),
     box-shadow 180ms ease,
     background 180ms ease;
@@ -1269,9 +1315,12 @@ button {
 
 .rail-context-chip-compact {
   display: grid;
-  height: 4.25rem;
+  width: var(--rail-compact-item);
+  height: var(--rail-compact-item);
+  margin-right: auto;
+  margin-left: auto;
   place-items: center;
-  padding: 0.5rem;
+  padding: 0.375rem;
 }
 
 .rail-context-chip-inner {
@@ -1282,8 +1331,8 @@ button {
 
 .rail-context-chip-icon {
   display: grid;
-  width: 2.75rem;
-  height: 2.75rem;
+  width: 2.65rem;
+  height: 2.65rem;
   flex: 0 0 auto;
   place-items: center;
   border-radius: 0.5rem;
@@ -1442,6 +1491,8 @@ button {
 
 .resource-rail {
   --resource-rail-width: 14rem;
+  --rail-compact-width: 5rem;
+  --rail-compact-item: 3.75rem;
   --rail-chip-rgb: var(--norix-rgb-green);
   flex-basis: var(--resource-rail-width);
   width: var(--resource-rail-width);
@@ -1471,7 +1522,33 @@ button {
 }
 
 .resource-rail-compact {
-  --resource-rail-width: 4.25rem;
+  --resource-rail-width: var(--rail-compact-width);
+}
+
+.tenant-sidebar {
+  --resource-rail-width: 17rem;
+  flex-basis: var(--resource-rail-width);
+  width: var(--resource-rail-width);
+  min-width: 0;
+  animation: norix-rail-reveal 420ms cubic-bezier(0.16, 1, 0.3, 1) both;
+  contain: paint;
+  will-change: flex-basis, width;
+}
+
+.tenant-sidebar-expanded {
+  --resource-rail-width: 17rem;
+}
+
+.tenant-sidebar-compact {
+  --resource-rail-width: var(--rail-compact-width, 5rem);
+}
+
+.tenant-sidebar-inner {
+  width: var(--resource-rail-width);
+  animation: norix-rail-content 180ms ease-out 190ms both;
+  transition:
+    width 280ms cubic-bezier(0.22, 1, 0.36, 1),
+    padding 220ms ease;
 }
 
 .resource-rail-inner {
@@ -1483,7 +1560,68 @@ button {
 }
 
 .resource-rail-top-spacer {
-  height: 1.2rem;
+  height: 2rem;
+}
+
+.rail-compact-stack {
+  padding-right: 0.5rem;
+  padding-left: 0.5rem;
+}
+
+.rail-compact-control {
+  justify-content: center;
+  padding-right: 0.5rem;
+  padding-left: 0.5rem;
+}
+
+.rail-compact-item {
+  width: var(--rail-compact-item, 3.75rem);
+  margin-right: auto;
+  margin-left: auto;
+  justify-content: center;
+  padding-right: 0;
+  padding-left: 0;
+}
+
+.rail-expanded-item {
+  width: 100%;
+}
+
+.rail-tooltip {
+  position: fixed;
+  z-index: 80;
+  max-width: 18rem;
+  pointer-events: none;
+  border: 1px solid rgb(var(--norix-rgb-blue) / 22%);
+  border-radius: 0.45rem;
+  background:
+    linear-gradient(145deg, rgb(var(--norix-rgb-blue) / 10%), rgb(var(--norix-rgb-deep) / 82%)),
+    rgb(var(--norix-rgb-deep) / 90%);
+  padding: 0.45rem 0.65rem;
+  color: rgb(var(--norix-rgb-light) / 88%);
+  font-size: 0.78rem;
+  font-weight: 650;
+  line-height: 1.2;
+  box-shadow:
+    inset 0 1px 0 rgb(var(--norix-rgb-light) / 10%),
+    0 16px 42px rgb(0 0 0 / 36%),
+    0 0 0 1px rgb(var(--norix-rgb-light) / 4%);
+  backdrop-filter: blur(18px) saturate(145%);
+  transform: translateY(-50%);
+  animation: norix-tooltip-in 150ms cubic-bezier(0.22, 1, 0.36, 1) both;
+}
+
+.rail-tooltip::before {
+  content: '';
+  position: absolute;
+  top: 50%;
+  left: -0.32rem;
+  width: 0.55rem;
+  height: 0.55rem;
+  border-bottom: 1px solid rgb(var(--norix-rgb-blue) / 18%);
+  border-left: 1px solid rgb(var(--norix-rgb-blue) / 18%);
+  background: rgb(var(--norix-rgb-deep) / 92%);
+  transform: translateY(-50%) rotate(45deg);
 }
 
 .side-drawer-backdrop {

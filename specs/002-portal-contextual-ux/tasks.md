@@ -10,6 +10,8 @@
 - [x] Agregar navegacion mobile inferior.
 - [x] Mover frontend hacia arquitectura por features.
 - [x] Crear toggle de tema.
+- [x] Crear modo persistente de rails: fijado desplegado y fijado contraido.
+- [x] Separar layouts persistentes para tenant, restaurante y sucursal.
 
 ## Pendiente
 

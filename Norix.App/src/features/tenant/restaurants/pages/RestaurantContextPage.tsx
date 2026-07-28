@@ -2,33 +2,32 @@ import type { FormEvent } from 'react'
 import { useState } from 'react'
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
 import {
-  Bell,
-  Building2,
-  CircleHelp,
-  Copy,
   Edit3,
-  FileText,
+  ExternalLink,
   Image,
-  MapPin,
-  Search,
-  Settings,
-  ShieldCheck,
-  Store,
-  Users,
   X,
 } from 'lucide-react'
 import { Link, useParams } from 'react-router-dom'
 import { ApiError } from '../../../../shared/api/apiClient'
+import { formatDate } from '../../../../shared/lib/formatters'
 import { CommandBar } from '../../../../shared/ui/CommandBar'
-import { MobileBottomNav } from '../../../../shared/ui/MobileBottomNav'
-import { ResourceRail } from '../../../../shared/ui/ResourceRail'
+import {
+  DataTableBody,
+  DataTableCell,
+  DataTableFilterButton,
+  DataTableFooter,
+  DataTableHead,
+  DataTableHeader,
+  DataTableMessageRow,
+  DataTableRow,
+  DataTableShell,
+} from '../../../../shared/ui/DataTable'
 import { ResourceHeader } from '../../../../shared/ui/ResourceHeader'
-import { TenantSidebar } from '../../../../shared/ui/TenantSidebar'
-import { ThemeToggle } from '../../../../shared/ui/ThemeToggle'
+import { FormField, InfoRow, ReadOnlyField } from '../../../../shared/ui/ResourcePanels'
+import { StatusBadge } from '../../../../shared/ui/StatusBadge'
 import {
   getRestaurant,
   getRestaurantBranches,
-  getRestaurants,
   type UpsertRestaurantRequest,
   updateRestaurant,
   upsertRestaurantSchema,
@@ -119,17 +118,7 @@ export function RestaurantContextPage() {
   }
 
   return (
-    <main className="norix-portal text-norix-light">
-      <div className="portal-shell flex h-screen overflow-hidden">
-        <TenantSidebar />
-        <MobileBottomNav />
-
-        <section className="flex min-w-0 flex-1 flex-col overflow-hidden">
-          <PortalTopBar />
-
-          <div className="flex min-h-0 flex-1">
-            <RestaurantResourceRail restaurantId={id!} restaurantName={title} />
-
+    <>
             <div className="subtle-scrollbar min-w-0 flex-1 overflow-y-auto pb-24 xl:pb-0">
           <ResourceHeader
             actions={
@@ -234,65 +223,81 @@ export function RestaurantContextPage() {
             </section>
 
             <section className="glass-panel p-4">
-              <div className="mb-4 flex items-center justify-between gap-3">
-                <h2 className="text-sm font-semibold text-white">Sucursales</h2>
-                <button className="text-xs text-norix-blue" type="button">Ver todas</button>
-              </div>
-              <div className="overflow-hidden rounded-md border border-white/10">
-                <table className="w-full min-w-[720px] border-collapse text-left text-sm">
-                  <thead className="bg-white/[0.045] text-xs uppercase tracking-[0.14em] text-white/42">
-                    <tr>
-                      <th className="px-4 py-3 font-semibold">Nombre</th>
-                      <th className="px-4 py-3 font-semibold">Codigo</th>
-                      <th className="px-4 py-3 font-semibold">Fecha apertura</th>
-                      <th className="px-4 py-3 font-semibold">Estado</th>
-                      <th className="px-4 py-3 text-right font-semibold">Acciones</th>
-                    </tr>
-                  </thead>
-                  <tbody className="divide-y divide-white/8">
-                    {branchesQuery.isLoading && (
-                      <tr>
-                        <td className="px-4 py-8 text-center text-white/48" colSpan={5}>
-                          Cargando sucursales...
-                        </td>
-                      </tr>
-                    )}
+              <DataTableShell
+                footer={
+                  <DataTableFooter
+                    itemLabel="row(s)"
+                    page={1}
+                    pageCount={1}
+                    selected={0}
+                    total={branches.length}
+                  />
+                }
+                minWidth={820}
+                toolbar={
+                  <div className="flex flex-col gap-3 lg:flex-row lg:items-center lg:justify-between">
+                    <div>
+                      <h2 className="text-sm font-semibold text-white">Sucursales</h2>
+                      <p className="mt-1 text-xs text-white/46">
+                        Unidades operativas que cuelgan de esta marca.
+                      </p>
+                    </div>
+                    <DataTableFilterButton>View</DataTableFilterButton>
+                  </div>
+                }
+              >
+                <DataTableHeader>
+                  <tr>
+                    <DataTableHead>Codigo</DataTableHead>
+                    <DataTableHead>Unidad operativa</DataTableHead>
+                    <DataTableHead>Fecha apertura</DataTableHead>
+                    <DataTableHead>Estado</DataTableHead>
+                    <DataTableHead align="right">Acciones</DataTableHead>
+                  </tr>
+                </DataTableHeader>
+                <DataTableBody>
+                  {branchesQuery.isLoading && (
+                    <DataTableMessageRow colSpan={5}>Cargando sucursales...</DataTableMessageRow>
+                  )}
 
-                    {!branchesQuery.isLoading && branches.length === 0 && (
-                      <tr>
-                        <td className="px-4 py-8 text-center text-white/48" colSpan={5}>
-                          No hay sucursales registradas para esta marca.
-                        </td>
-                      </tr>
-                    )}
+                  {!branchesQuery.isLoading && branches.length === 0 && (
+                    <DataTableMessageRow colSpan={5}>
+                      No hay sucursales registradas para esta marca.
+                    </DataTableMessageRow>
+                  )}
 
-                    {branches.map((branch) => (
-                      <tr className="bg-white/[0.015] hover:bg-white/[0.04]" key={branch.id}>
-                        <td className="px-4 py-3 font-medium text-white">{branch.nombre}</td>
-                        <td className="px-4 py-3 text-white/58">{branch.codigo}</td>
-                        <td className="px-4 py-3 text-white/58">{formatDate(branch.fechaApertura)}</td>
-                        <td className="px-4 py-3">
-                          <span className={`rounded-full border px-2.5 py-1 text-xs font-semibold ${
-                            branch.activo
-                              ? 'border-norix-green/24 bg-norix-green/10 text-norix-green'
-                              : 'border-white/10 bg-white/[0.04] text-white/42'
-                          }`}>
-                            {branch.activo ? 'Activo' : 'Inactivo'}
-                          </span>
-                        </td>
-                        <td className="px-4 py-3 text-right">
-                          <Link
-                            className="glass-button inline-flex rounded-md px-2 py-1 text-xs text-norix-blue"
-                            to={`/tenant/restaurantes/${id}/sucursales/${branch.id}`}
-                          >
-                            Abrir
-                          </Link>
-                        </td>
-                      </tr>
-                    ))}
-                  </tbody>
-                </table>
-              </div>
+                  {branches.map((branch) => (
+                    <DataTableRow key={branch.id}>
+                      <DataTableCell className="font-semibold text-norix-green">
+                        {branch.codigo}
+                      </DataTableCell>
+                      <DataTableCell>
+                        <div>
+                          <p className="font-semibold text-white">{branch.nombre}</p>
+                          <p className="mt-1 text-xs text-white/42">{branch.id}</p>
+                        </div>
+                      </DataTableCell>
+                      <DataTableCell className="text-white/58">
+                        {formatDate(branch.fechaApertura)}
+                      </DataTableCell>
+                      <DataTableCell>
+                        <StatusBadge tone={branch.activo ? 'green' : 'neutral'}>
+                          {branch.activo ? 'Activa' : 'Inactiva'}
+                        </StatusBadge>
+                      </DataTableCell>
+                      <DataTableCell align="right">
+                        <Link
+                          className="glass-button inline-flex h-9 items-center gap-2 rounded-md px-3 text-xs font-semibold text-norix-blue"
+                          to={`/tenant/restaurantes/${id}/sucursales/${branch.id}`}
+                        >
+                          <ExternalLink size={14} />
+                          Abrir
+                        </Link>
+                      </DataTableCell>
+                    </DataTableRow>
+                  ))}
+                </DataTableBody>
+              </DataTableShell>
               {branchesError && (
                 <p className="mt-4 rounded-md border border-red-400/20 bg-red-400/10 px-3 py-2 text-sm text-red-200">
                   No se pudieron cargar las sucursales. {branchesError}
@@ -301,8 +306,6 @@ export function RestaurantContextPage() {
             </section>
           </div>
             </div>
-          </div>
-
           {isEditPanelOpen && (
             <div className="side-drawer-backdrop fixed inset-0 z-20 bg-black/45 backdrop-blur-sm">
               <aside className="side-drawer glass-panel ml-auto flex h-full w-full max-w-xl flex-col rounded-none border-y-0 border-r-0 p-5">
@@ -371,204 +374,10 @@ export function RestaurantContextPage() {
               </aside>
             </div>
           )}
-        </section>
-      </div>
-    </main>
+    </>
   )
-}
-
-function formatDate(value: string | null) {
-  if (!value) {
-    return 'Sin fecha'
-  }
-
-  return new Intl.DateTimeFormat('es-MX', {
-    day: '2-digit',
-    month: 'short',
-    year: 'numeric',
-  }).format(new Date(value))
 }
 
 function getInitial(value: string) {
   return value.trim().charAt(0).toUpperCase() || 'R'
-}
-
-function InfoRow({
-  copy = false,
-  label,
-  tone = 'default',
-  value,
-}: {
-  copy?: boolean
-  label: string
-  tone?: 'default' | 'green' | 'muted'
-  value?: string | null
-}) {
-  const displayValue = value || 'No registrado'
-  const valueClass =
-    tone === 'green'
-      ? 'text-norix-green'
-      : tone === 'muted'
-        ? 'text-white/44'
-        : 'text-white/72'
-
-  return (
-    <div className="grid gap-1 sm:grid-cols-[12rem_minmax(0,1fr)] sm:gap-4">
-      <dt className="text-sm font-semibold text-white/70">{label}</dt>
-      <dd className={`flex min-w-0 items-center gap-2 text-sm ${valueClass}`}>
-        <span className="min-w-0 truncate">{displayValue}</span>
-        {copy && value && (
-          <button className="text-norix-blue hover:text-white" title="Copiar" type="button">
-            <Copy size={15} />
-          </button>
-        )}
-      </dd>
-    </div>
-  )
-}
-
-function FormField({
-  label,
-  value,
-  placeholder,
-  onChange,
-}: {
-  label: string
-  value?: string
-  placeholder: string
-  onChange: (value: string) => void
-}) {
-  return (
-    <label className="grid gap-2">
-      <span className="text-sm font-medium text-white/72">{label}</span>
-      <input
-        className="h-11 rounded-md border border-white/10 bg-white/[0.045] px-3 text-sm text-white outline-none focus:border-norix-green/60"
-        onChange={(event) => onChange(event.target.value)}
-        placeholder={placeholder}
-        value={value ?? ''}
-      />
-    </label>
-  )
-}
-
-function ReadOnlyField({ label, value }: { label: string; value: string }) {
-  return (
-    <div className="grid gap-2">
-      <span className="text-sm font-medium text-white/72">{label}</span>
-      <div className="flex h-11 items-center rounded-md border border-white/10 bg-white/[0.025] px-3 text-sm font-semibold text-norix-green">
-        {value}
-      </div>
-    </div>
-  )
-}
-
-export function RestaurantResourceRail({
-  compactOnChild = false,
-  restaurantId,
-  restaurantName,
-}: {
-  compactOnChild?: boolean
-  restaurantId: string
-  restaurantName: string
-}) {
-  const restaurantsQuery = useQuery({
-    queryKey: ['tenant-restaurants-switcher'],
-    queryFn: () => getRestaurants({ activo: true }),
-  })
-  const restaurantSwitcherItems = buildRestaurantSwitcherItems({
-    currentId: restaurantId,
-    currentName: restaurantName,
-    restaurants: restaurantsQuery.data ?? [],
-  })
-
-  return (
-    <ResourceRail
-      accent="green"
-      forceCompact={compactOnChild}
-      footer={
-        <>
-          <p className="mb-2 text-[0.64rem] font-semibold uppercase tracking-[0.2em] text-white/34">
-            Cambiar de nivel
-          </p>
-          <Link className="flex items-center gap-3 rounded-md px-3 py-2 text-sm text-white/62 hover:bg-white/[0.04] hover:text-white" to="/tenant/restaurantes">
-            <Store size={16} className="text-norix-green" />
-            Restaurantes
-          </Link>
-          <Link className="mt-1 flex items-center gap-3 rounded-md px-3 py-2 text-sm text-white/62 hover:bg-white/[0.04] hover:text-white" to="/contexto">
-            <Building2 size={16} className="text-norix-blue" />
-            Grupo Gourmet
-          </Link>
-        </>
-      }
-      icon={<Store size={18} />}
-      items={[
-        { icon: <FileText size={17} />, label: 'Informacion general', to: `/tenant/restaurantes/${restaurantId}` },
-        { icon: <MapPin size={17} />, label: 'Sucursales' },
-        { icon: <Users size={17} />, label: 'Usuarios' },
-        { icon: <ShieldCheck size={17} />, label: 'Roles y permisos' },
-        { icon: <Settings size={17} />, label: 'Configuracion' },
-      ]}
-      resourceKind="Restaurante / Marca"
-      storageKey="norix.restaurantRailPinned"
-      switcherItems={restaurantSwitcherItems}
-      switcherLabel="Cambiar restaurante / marca"
-      title={restaurantName}
-    />
-  )
-}
-
-function buildRestaurantSwitcherItems({
-  currentId,
-  currentName,
-  restaurants,
-}: {
-  currentId: string
-  currentName: string
-  restaurants: Array<{ codigo: string; id: string; nombre: string }>
-}) {
-  const items = restaurants.map((restaurant) => ({
-    active: restaurant.id === currentId,
-    detail: restaurant.codigo,
-    label: restaurant.nombre,
-    to: `/tenant/restaurantes/${restaurant.id}`,
-  }))
-
-  if (items.some((item) => item.to.endsWith(currentId))) {
-    return items
-  }
-
-  return [
-    {
-      active: true,
-      detail: 'Actual',
-      label: currentName,
-      to: `/tenant/restaurantes/${currentId}`,
-    },
-    ...items,
-  ]
-}
-
-export function PortalTopBar() {
-  return (
-    <header className="glass-topbar relative flex h-12 items-center justify-end px-5 lg:px-6">
-      <label className="glass-button absolute left-1/2 hidden h-8 w-[34rem] max-w-[48vw] -translate-x-1/2 items-center gap-2 rounded-md px-3 text-xs text-white/38 lg:flex">
-        <Search size={14} />
-        <input
-          className="w-full border-0 bg-transparent text-xs text-white outline-none placeholder:text-white/34"
-          placeholder="Buscar recursos, servicios y documentos (Ctrl+/)"
-        />
-      </label>
-      <div className="flex items-center gap-4 text-white/56">
-        <Search size={17} className="lg:hidden" />
-        <Bell size={17} />
-        <Settings size={17} />
-        <CircleHelp size={17} />
-        <ThemeToggle />
-        <button className="glass-button flex items-center gap-2 rounded-md px-3 py-1.5 text-xs text-white/72" type="button">
-          <span className="grid h-5 w-5 place-items-center rounded bg-norix-blue/20 text-norix-blue">G</span>
-          Portal global
-        </button>
-      </div>
-    </header>
-  )
 }

@@ -57,15 +57,20 @@ export function ResourceHeader({
       {actions && <div className="mb-3">{actions}</div>}
 
       {tabs && tabs.length > 0 && (
-        <nav className="resource-tabs flex gap-6 overflow-x-auto" aria-label={`Secciones de ${title}`}>
+        <nav className="resource-tabs flex gap-6 overflow-x-auto" aria-label={`Secciones de ${title}`} role="tablist">
           {tabs.map((tab) => (
             <button
+              aria-controls={`resource-tab-panel-${slugify(tab.label)}`}
+              aria-selected={Boolean(tab.active)}
               className={`relative whitespace-nowrap py-3 text-sm transition ${
                 tab.active ? 'text-white' : 'text-white/54 hover:text-white'
               } ${tab.disabled ? 'cursor-not-allowed opacity-45' : ''}`}
               disabled={tab.disabled}
+              id={`resource-tab-${slugify(tab.label)}`}
               key={tab.label}
               onClick={tab.onClick}
+              role="tab"
+              tabIndex={tab.active ? 0 : -1}
               type="button"
             >
               {tab.label}
@@ -85,7 +90,7 @@ function ResourceBreadcrumb({ items }: { items: ResourceBreadcrumbItem[] }) {
         const isLast = index === items.length - 1
         const content = item.to && !isLast
           ? <Link className="hover:text-white" to={item.to}>{item.label}</Link>
-          : <span className={isLast ? 'text-white' : undefined}>{item.label}</span>
+          : <span aria-current={isLast ? 'page' : undefined} className={isLast ? 'text-white' : undefined}>{item.label}</span>
 
         return (
           <span className="contents" key={`${item.label}-${index}`}>
@@ -96,4 +101,13 @@ function ResourceBreadcrumb({ items }: { items: ResourceBreadcrumbItem[] }) {
       })}
     </div>
   )
+}
+
+function slugify(value: string) {
+  return value
+    .normalize('NFD')
+    .replace(/[\u0300-\u036f]/g, '')
+    .toLowerCase()
+    .replace(/[^a-z0-9]+/g, '-')
+    .replace(/^-|-$/g, '')
 }

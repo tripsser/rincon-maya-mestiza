@@ -73,7 +73,9 @@ export function DataTableMessageRow({
   return (
     <tr>
       <td className="h-28 px-4 text-center text-sm text-white/48" colSpan={colSpan}>
-        {children}
+        <span role="status" aria-live="polite">
+          {children}
+        </span>
       </td>
     </tr>
   )
@@ -102,7 +104,7 @@ export function DataTableFooter({
       <div className="flex flex-wrap items-center gap-5 xl:justify-end">
         <div className="flex items-center gap-2">
           <span>Rows per page</span>
-          <button className="data-table-select" type="button">
+          <button aria-label={`Filas por pagina: ${rowsPerPage}`} className="data-table-select" type="button">
             {rowsPerPage}
             <ChevronDown size={14} />
           </button>
@@ -119,6 +121,8 @@ export function DataTableFooter({
           </button>
           {[1, 2, 3].map((item) => (
             <button
+              aria-current={item === page ? 'page' : undefined}
+              aria-label={`Pagina ${item}`}
               className={`data-table-page-number ${item === page ? 'data-table-page-number-active' : ''}`}
               key={item}
               type="button"
@@ -127,7 +131,7 @@ export function DataTableFooter({
             </button>
           ))}
           <span className="px-2 text-white/58">...</span>
-          <button className="data-table-page-number" type="button">
+          <button aria-label="Pagina siguiente" className="data-table-page-number" type="button">
             Next
           </button>
           <button className="data-table-page-button" type="button" aria-label="Pagina siguiente">
@@ -157,9 +161,20 @@ export function DataTableFilterButton({
   )
 }
 
-export function DataTableCheckbox({ checked = false }: { checked?: boolean }) {
+export function DataTableCheckbox({
+  checked = false,
+  label = 'Seleccionar fila',
+}: {
+  checked?: boolean
+  label?: string
+}) {
   return (
-    <span className={`data-table-checkbox ${checked ? 'data-table-checkbox-checked' : ''}`} aria-hidden="true" />
+    <input
+      aria-label={label}
+      className="data-table-checkbox"
+      defaultChecked={checked}
+      type="checkbox"
+    />
   )
 }
 
