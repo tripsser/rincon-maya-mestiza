@@ -1,9 +1,10 @@
-import { Navigate, Route, Routes } from 'react-router-dom'
+import { Route, Routes } from 'react-router-dom'
 import { BranchPortalLayout } from '../layouts/BranchPortalLayout'
 import { RestaurantPortalLayout } from '../layouts/RestaurantPortalLayout'
 import { TenantPortalLayout } from '../layouts/TenantPortalLayout'
 import { LoginPage } from '../../features/auth/pages/LoginPage'
 import { ContextPage } from '../../features/context/pages/ContextPage'
+import { LandingPage } from '../../features/marketing/pages/LandingPage'
 import { FiscalEntityContextPage } from '../../features/tenant/fiscal-entities/pages/FiscalEntityContextPage'
 import { FiscalEntitiesPage } from '../../features/tenant/fiscal-entities/pages/FiscalEntitiesPage'
 import { BranchContextPage } from '../../features/tenant/restaurants/pages/BranchContextPage'
@@ -13,7 +14,7 @@ import { RestaurantsPage } from '../../features/tenant/restaurants/pages/Restaur
 export function AppRoutes() {
   return (
     <Routes>
-      <Route path="/" element={<Navigate to="/login" replace />} />
+      <Route path="/" element={<LandingPage />} />
       <Route path="/login" element={<LoginPage />} />
       <Route element={<TenantPortalLayout />}>
         <Route path="/contexto" element={<ContextPage />} />
